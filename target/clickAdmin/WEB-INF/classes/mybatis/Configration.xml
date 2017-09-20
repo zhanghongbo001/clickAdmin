@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <mappers>
+        <mapper resource="mapper/AdminMapper.xml"/>
+        <mapper resource="mapper/RechargeRecordMapper.xml"/>
+        <mapper resource="mapper/SysUserMapper.xml"/>
+        <mapper resource="mapper/SysResourceMapper.xml"/>
+        <mapper resource="mapper/SysRoleMapper.xml"/>
+        <mapper resource="mapper/SysRoleResourceMapper.xml"/>
+        <mapper resource="mapper/SysUserRoleMapper.xml"/>
+        <mapper resource="mapper/WebTaskExecuteLogMapper.xml"/>
+        <mapper resource="mapper/WebTaskItemMapper.xml"/>
+        <mapper resource="mapper/WebTaskMapper.xml"/>
+    </mappers>
+</configuration>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.bdt.framework.mapper.RechargeRecordMapper" >
+  <resultMap id="BaseResultMap" type="com.bdt.framework.entity.RechargeRecord" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="order_id" property="orderId" jdbcType="VARCHAR" />
+    <result column="order_name" property="orderName" jdbcType="VARCHAR" />
+    <result column="total_fee" property="totalFee" jdbcType="DECIMAL" />
+    <result column="order_desc" property="orderDesc" jdbcType="VARCHAR" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="admin_id" property="adminId" jdbcType="INTEGER" />
+    <result column="success" property="success" jdbcType="BIT" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from recharge_record
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.bdt.framework.entity.RechargeRecord" >
+    <selectKey resultType="java.lang.Integer" keyProperty="id" order="AFTER" >
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into recharge_record (order_id, order_name, total_fee, 
+      order_desc, create_time, admin_id, 
+      success)
+    values (#{orderId,jdbcType=VARCHAR}, #{orderName,jdbcType=VARCHAR}, #{totalFee,jdbcType=DECIMAL}, 
+      #{orderDesc,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{adminId,jdbcType=INTEGER}, 
+      #{success,jdbcType=BIT})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.bdt.framework.entity.RechargeRecord" >
+    update recharge_record
+    set order_id = #{orderId,jdbcType=VARCHAR},
+      order_name = #{orderName,jdbcType=VARCHAR},
+      total_fee = #{totalFee,jdbcType=DECIMAL},
+      order_desc = #{orderDesc,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      admin_id = #{adminId,jdbcType=INTEGER},
+      success = #{success,jdbcType=BIT}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select id, order_id, order_name, total_fee, order_desc, create_time, admin_id, success
+    from recharge_record
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select id, order_id, order_name, total_fee, order_desc, create_time, admin_id, success
+    from recharge_record
+  </select>
+</mapper>

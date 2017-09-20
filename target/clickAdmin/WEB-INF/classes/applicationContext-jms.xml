@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jms="http://www.springframework.org/schema/jms"
+	xsi:schemaLocation="
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-3.0.xsd
+	http://www.springframework.org/schema/jms
+	http://www.springframework.org/schema/jms/spring-jms-3.0.xsd
+	http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+
+	
+	<!-- topic发送主题 队列 -->
+	<!--<bean id="topic" class="org.apache.activemq.command.ActiveMQTopic">
+		<constructor-arg value="sse.fetchTopicSMS" />
+	</bean>-->
+	
+	<!--queue发送主题队列目的地-->  
+      <bean id="topic" class="org.apache.activemq.command.ActiveMQQueue">
+       <constructor-arg value="sse.fetchQueueSMS"/>
+    </bean>
+	
+	<!-- 配置jmsTemplate -->
+	<bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+		<property name="connectionFactory" ref="connectionFactory" />
+		<property name="defaultDestination" ref="topic" />
+		<property name="explicitQosEnabled" value="true" />
+		<property name="deliveryMode" value="1" />
+	</bean>
+
+	<!--配置 activemq的连接池 -->
+	<bean id="connectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory"
+		destroy-method="stop">
+		<property name="connectionFactory">
+			<bean class="org.apache.activemq.ActiveMQConnectionFactory">
+				<property name="brokerURL" value="tcp://localhost:61616" />
+			</bean>
+		</property>
+		<property name="maxConnections" value="1"></property>
+	</bean>
+	
+     <!-- 消息监听容器 -->  
+    <bean id="jmsContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">  
+        <property name="connectionFactory" ref="connectionFactory" />  
+        <property name="destination" ref="topic" />  
+        <property name="messageListener" ref="testListener" />  
+    </bean>  
+	
+	<bean id="testListener" class="com.bdt.jms.TestListener">
+		<constructor-arg ref="jmsTemplate"></constructor-arg>
+		<constructor-arg value="sse.fetchTopicSMS"></constructor-arg>
+	</bean>
+	<bean id="producerServiceImpl"
+		class="com.bdt.jms.ProducerServiceImpl">
+		<property name="jmsTemplate" ref="jmsTemplate"></property>
+		<property name="topicName" value="sse.fetchTopicSMS"></property>
+	</bean>
+
+</beans>

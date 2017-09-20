@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <description>Shiro Configuration</description>
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <property name="realm" ref="shiroDbRealm"></property>
+        <property name="cacheManager" ref="cacheManager"></property>
+    </bean>
+    <!-- 項目自定义的Realm -->
+    <bean id="shiroDbRealm" class="com.bdt.framework.common.realm.ShiroDbRealm">
+        <property name="cacheManager" ref="cacheManager" />
+    </bean>
+    <!-- Shiro Filter -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <property name="securityManager" ref="securityManager" />
+        <!--没有登录的用户请求需要登录的页面时自动跳转到登录页面-->
+        <property name="loginUrl" value="/login" />
+        <!--登录成功默认跳转页面-->
+        <property name="successUrl" value="/index.jsp" />
+        <!--没有权限默认跳转的页面-->
+        <property name="unauthorizedUrl" value="/index.jsp" />
+        <property name="filterChainDefinitions">
+            <!--anon:例子/admins/**=anon 没有参数，表示可以匿名使用-->
+            <!--authc:例如/admins/user/**=authc表示需要认证(登录)才能使用，没有参数-->
+            <value>
+                /index.html = authc
+                /login = anon
+                /addUser=anon
+                /PictureCheckCode=anon
+                /activation=anon
+                /logout.html = anon
+                /assets/**=anon
+                /** = authc
+            </value>
+        </property>
+    </bean>
+    <!-- 用户授权信息Cache -->
+    <bean id="cacheManager" class="org.apache.shiro.cache.MemoryConstrainedCacheManager" />
+    <!-- 保证实现了Shiro内部lifecycle函数的bean执行 -->
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor" />
+
+    <!-- AOP式方法级权限检查 -->
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" depends-on="lifecycleBeanPostProcessor">
+        <property name="proxyTargetClass" value="true" />
+    </bean>
+
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager" />
+    </bean>
+</beans>
