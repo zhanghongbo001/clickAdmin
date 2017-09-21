@@ -32,7 +32,7 @@
         <a href="javascript:;" class="left">左</a>
         <a href="javascript:;" class="right">右</a>
     </div>
-    <script type="text/javascript" src="assets/login/js/login.js"></script>
+    <script type="text/javascript" src="${ctx}/assets/login/js/login.js"></script>
     <div class="container">
         <div class="register-box">
             <div class="reg-slogan"> 后台系统管理（云排名）</div>
@@ -54,7 +54,7 @@
                     </div>
                     <div class="cell">
                         <input type="text" name="randCheckCode" id="CreateCheckCode" maxlength="4" class="text" placeholder="验证码"/>
-                        <a href="myReload()"><img id="img" src="${ctx}/PictureCheckCode"  /></a>
+                        <img id="img" class="validCodeImg" src="${ctx}/PictureCheckCode" onclick="myReload();" />
                     </div>
                     <div class="bottom">
                         <button type="submit" id="login_form_submit" style="width:328px;" class="button btn-green">登录</button>
@@ -67,7 +67,8 @@
 <script>window.ctx = "${ctx}";</script>
 <script language="javascript">
     function myReload(){
-        document.getElementById("CreateCheckCode").src="PictureCheckCode?"+Math.random();
+        //不刷新页面时也可以刷新验证码
+        $(".validCodeImg").get(0).src=$(".validCodeImg").get(0).src+"?PictureCheckCode="+Math.random();
     }
 </script>
 </body>
