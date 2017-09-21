@@ -1,5 +1,8 @@
 package com.bdt.framework.code;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -19,6 +22,8 @@ import java.util.Random;
  * @data 2016/7/12.
  */
 public class PictureCheckCode extends HttpServlet {
+
+    private static Logger log= LoggerFactory.getLogger(PictureCheckCode.class);
 
     private static final long serialVersionUID = 1L;
 
@@ -147,7 +152,7 @@ public class PictureCheckCode extends HttpServlet {
         HttpSession session = request.getSession(true);
         session.setAttribute("randCheckCode", sRand);
         g.dispose();//释放g所占用的系统资源
-        System.out.print("验证码：" + sRand + "-");
+        log.info("验证码：" + sRand);
         //使用IO流输出图片
         ImageIO.write(image, "JPEG", response.getOutputStream());//输出图片
     }
