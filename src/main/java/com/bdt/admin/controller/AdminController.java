@@ -159,11 +159,9 @@ public class AdminController {
                         tempFileItem = fileItem;
                     }
                 }
-                //session中的参数设置获取是我自己的原因,文件名你们可以直接使用fileName,这个是原来的文件名
-                String fileSysName = request.getSession().getAttribute("fileSysName").toString();
-                String realname = fileSysName+fileName.substring(fileName.lastIndexOf("."));//转化后的文件名
+                String realname = fileName.substring(fileName.lastIndexOf("."));//转化后的文件名
                 request.getSession().setAttribute("realname",realname);
-                String filePath = "sound/";//文件上传路径
+                String filePath = "f:\\test\\";//文件上传路径
                 // 临时目录用来存放所有分片文件
                 String tempFileDir = filePath + id;
                 File parentFileDir = new File(tempFileDir);
