@@ -22,16 +22,16 @@ jQuery(function() {
         },
         duplicate:true,//是否可重复选择同一文件
         chunked: true,  //分片处理
-        chunkSize: 20 * 1024 * 1024, //每片20M
+        chunkSize: 4 * 1024 * 1024, //每片20M
         threads:3,//上传并发数。允许同时最大上传进程数。
         prepareNextFile:true,// 在上传当前文件时，准备好下一个文件
         // 禁掉全局的拖拽功能。
-        disableGlobalDnd: true,
-        accept: {
+        disableGlobalDnd: true
+        /*accept: {
             //限制上传文件为MP4
             extensions: 'doc,docx，pdf',
             mimeTypes: 'doc/docx/pdf'
-        }
+        }*/
     });
 
     // 当有文件添加进来的时候

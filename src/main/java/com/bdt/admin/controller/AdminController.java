@@ -27,7 +27,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * 用户管理
@@ -38,8 +41,7 @@ import java.util.List;
 @Controller
 @RequestMapping(value = "/admin")
 public class AdminController {
-
-    private static final Logger log= LoggerFactory.getLogger(AdminController.class);
+    private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -51,28 +53,31 @@ public class AdminController {
     public String list(Page<Admin> page, ModelMap modelMap) {
         Page<Admin> admins = adminBiz.selectByPage(page);
         modelMap.put("adminlist", admins);
-        modelMap.put("pages",admins.getPages());
-        modelMap.put("pageNum",admins.getPageNum());
+        modelMap.put("pages", admins.getPages());
+        modelMap.put("pageNum", admins.getPageNum());
         return "/WEB-INF/view/admin/list";
     }
 
     /**
      * web uploader 上传文件
+     *
      * @return
      */
-    @RequestMapping(value = "/uploader",method = RequestMethod.GET)
-    public String uploader(){
+    @RequestMapping(value = "/uploader", method = RequestMethod.GET)
+    public String uploader() {
         return "WEB-INF/view/uploader/uploader";
     }
+
     /**
      * 搜索用户
+     *
      * @param account
      * @return
      */
-    @RequestMapping(value = "/lists",method = RequestMethod.POST)
+    @RequestMapping(value = "/lists", method = RequestMethod.POST)
     @ResponseBody
     public List<Admin> lists(@Param("account") String account, ModelMap modelMap) throws Exception {
-        account=account.trim();
+        account = account.trim();
         List<Admin> admins = null;
         try {
             if (account != "") {
@@ -80,7 +85,7 @@ public class AdminController {
             } else {
                 admins = adminBiz.selectByAll();
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new BusinessException("查询的用户不存在!");
         }
         return admins;
@@ -132,19 +137,18 @@ public class AdminController {
     @ResponseBody
     public void webUploader(HttpServletRequest request, HttpServletResponse response) throws Exception {
         log.info("进入上传服务");
+        String id = "";
+        String fileName = "";
+        // 如果大于1说明是分片处理
+        int chunks = 1;
+        int chunk = 0;
         boolean isMultipart = ServletFileUpload.isMultipartContent(request);
-        if(isMultipart){
+        if (isMultipart) {
             try {
                 DiskFileItemFactory factory = new DiskFileItemFactory();
                 ServletFileUpload upload = new ServletFileUpload(factory);
                 // 得到所有的表单域，它们目前都被当作FileItem
                 List<FileItem> fileItems = upload.parseRequest(request);
-                log.info(fileItems.get(0).toString());
-                String id = "";
-                String fileName = "";
-                // 如果大于1说明是分片处理
-                int chunks = 1;
-                int chunk = 0;
                 FileItem tempFileItem = null;
                 for (FileItem fileItem : fileItems) {
                     if (fileItem.getFieldName().equals("id")) {
@@ -155,12 +159,11 @@ public class AdminController {
                         chunks = Integer.valueOf(fileItem.getString());
                     } else if (fileItem.getFieldName().equals("chunk")) {
                         chunk = Integer.valueOf(fileItem.getString());
-                    } else if (fileItem.getFieldName().equals("multiFile")) {
+                    } else if (fileItem.getFieldName().equals("file")) {
                         tempFileItem = fileItem;
                     }
                 }
-                String realname = fileName.substring(fileName.lastIndexOf("."));//转化后的文件名
-                request.getSession().setAttribute("realname",realname);
+                String realname = fileName;//转化后的文件名
                 String filePath = "f:\\test\\";//文件上传路径
                 // 临时目录用来存放所有分片文件
                 String tempFileDir = filePath + id;
@@ -180,14 +183,15 @@ public class AdminController {
                     if (!partFile.exists()) {
                         uploadDone = false;
                     }
+
                 }
                 // 所有分片文件都上传完成
                 // 将所有分片文件合并到一个文件中
                 if (uploadDone) {
                     // 得到 destTempFile 就是最终的文件
                     File destTempFile = new File(filePath, realname);
-                    for (int i = 0; i < chunks; i++) {
-                        File partFile = new File(parentFileDir, realname + "_" + i + ".part");
+                    for (int j = 0; j < chunks; j++) {
+                        File partFile = new File(parentFileDir, realname + "_" + j + ".part");
                         FileOutputStream destTempfos = new FileOutputStream(destTempFile, true);
                         //遍历"所有分片文件"到"最终文件"中
                         FileUtils.copyFile(partFile, destTempfos);
@@ -195,13 +199,14 @@ public class AdminController {
                     }
                     // 删除临时目录中的分片文件
                     FileUtils.deleteDirectory(parentFileDir);
+
                 } else {
                     // 临时文件创建失败
-                    if (chunk == chunks -1) {
-                        FileUtils.deleteDirectory(parentFileDir);
+                    if (chunk == chunks - 1) {
+                        //FileUtils.deleteDirectory(parentFileDir);
                     }
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 log.error("上传文件失败了！");
             }
         }
