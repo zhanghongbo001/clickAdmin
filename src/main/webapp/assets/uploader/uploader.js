@@ -22,7 +22,7 @@ jQuery(function() {
         },
         duplicate:true,//是否可重复选择同一文件
         chunked: true,  //分片处理
-        chunkSize: 4 * 1024 * 1024, //每片20M
+        chunkSize: 20 * 1024 * 1024, //每片20M
         threads:3,//上传并发数。允许同时最大上传进程数。
         prepareNextFile:true,// 在上传当前文件时，准备好下一个文件
         // 禁掉全局的拖拽功能。
@@ -55,9 +55,10 @@ jQuery(function() {
                 '</div>').appendTo( $li ).find('.progress-bar');
         }
 
-        $li.find('p.state').text('上传中');
+        $li.find('p.state').text('上传中,已上传'+Math.round(percentage*100)+'%');
 
-        $percent.css( 'width', percentage * 100 + '%' );
+        //进度条
+        $percent.css("width",percentage*100+'%');
     });
 
     uploader.on( 'uploadSuccess', function( file ) {
