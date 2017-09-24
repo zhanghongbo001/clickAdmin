@@ -99,7 +99,6 @@ jQuery(function() {
      * 验证文件格式以及文件大小
      */
     uploader.on("error", function (type) {
-        debugger;
         if (type == "Q_TYPE_DENIED") {
             layer.msg("请上传doc,docx，pdf格式文件");
         } else if (type == "Q_EXCEED_SIZE_LIMIT") {

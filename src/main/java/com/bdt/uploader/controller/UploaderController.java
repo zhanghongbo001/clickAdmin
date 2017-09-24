@@ -24,15 +24,17 @@ import java.util.List;
 @Controller
 @RequestMapping(value = "/uploaders")
 public class UploaderController {
-    private static final Logger log= LoggerFactory.getLogger(UploaderController.class);
+    private static final Logger log = LoggerFactory.getLogger(UploaderController.class);
 
-    private String id="";
-    private String fileName="";
+    private String id = "";
+    private String fileName = "";
     // 如果大于1说明是分片处理
-    private int chunks=1;
-    private int chunk=0;
+    private int chunks = 1;
+    private int chunk = 0;
+
     /**
      * web uploader 上传文件
+     *
      * @return
      */
     @RequestMapping(value = "/uploader", method = RequestMethod.GET)
@@ -42,6 +44,7 @@ public class UploaderController {
 
     /**
      * 文件分片上传
+     *
      * @param request
      * @param response
      * @throws Exception
@@ -49,7 +52,6 @@ public class UploaderController {
     @RequestMapping(method = {RequestMethod.POST}, value = {"/webUploader"})
     @ResponseBody
     public void webUploader(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        log.info("进入上传服务");
         boolean isMultipart = ServletFileUpload.isMultipartContent(request);
         if (isMultipart) {
             try {
@@ -78,6 +80,7 @@ public class UploaderController {
                 File parentFileDir = new File(tempFileDir);
                 if (!parentFileDir.exists()) {
                     parentFileDir.mkdirs();
+                    log.info("创建新的文件夹：{}", parentFileDir.getName());
                 }
                 // 分片处理时，前台会多次调用上传接口，每次都会上传文件的一部分到后台
                 File tempPartFile = new File(parentFileDir, realname + "_" + chunk + ".part");
@@ -91,13 +94,14 @@ public class UploaderController {
                     if (!partFile.exists()) {
                         uploadDone = false;
                     }
-
                 }
                 // 所有分片文件都上传完成
                 // 将所有分片文件合并到一个文件中
                 if (uploadDone) {
                     // 得到 destTempFile 就是最终的文件
                     File destTempFile = new File(filePath, realname);
+                    double totleSize = getDirSize(new File(String.valueOf(parentFileDir)));
+                    log.info("本次要合并文件夹：{}，大小：{}，合并后的文件名为：{}", parentFileDir.getName(), totleSize, realname);
                     for (int j = 0; j < chunks; j++) {
                         File partFile = new File(parentFileDir, realname + "_" + j + ".part");
                         FileOutputStream destTempfos = new FileOutputStream(destTempFile, true);
@@ -107,7 +111,7 @@ public class UploaderController {
                     }
                     // 删除临时目录中的分片文件
                     FileUtils.deleteDirectory(parentFileDir);
-
+                    log.info("合并完成，已删除已合并的文件：{}", parentFileDir.getName());
                 } else {
                     // 临时文件创建失败
                     if (chunk == chunks - 1) {
@@ -117,6 +121,32 @@ public class UploaderController {
             } catch (Exception e) {
                 log.error("上传文件失败了！");
             }
+        }
+    }
+
+    /**
+     * 获取文件夹大小
+     *
+     * @param file
+     * @return
+     */
+    private static double getDirSize(File file) {
+        //判断文件是否存在
+        if (file.exists()) {
+            //如果是目录则递归计算其内容的总大小
+            if (file.isDirectory()) {
+                File[] children = file.listFiles();
+                double size = 0;
+                for (File f : children)
+                    size += getDirSize(f);
+                return size;
+            } else {//如果是文件则直接返回其大小,以“兆”为单位
+                double size = (double) file.length() / 1024 / 1024;
+                return size;
+            }
+        } else {
+             log.info("文件或者文件夹不存在，请检查路径是否正确！");
+            return 0.0;
         }
     }
 }
