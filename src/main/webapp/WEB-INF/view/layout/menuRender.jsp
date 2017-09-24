@@ -34,7 +34,7 @@
         <a href="${ctx}/curve/list" class="waves-effect"><i class="md md-home"></i><span>趋势分析</span></a>
     </li>
     <li>
-        <a href="${ctx}/admin/uploader" class="waves-effect"><i class="md md-home"></i><span>WEB UPLOADER</span></a>
+        <a href="${ctx}/uploaders/uploader" class="waves-effect"><i class="md md-home"></i><span>WEB UPLOADER</span></a>
     </li>
     <%--<li class="has_sub">
         <a href="javascript:;" class="waves-effect"><i class=""></i><span>业务管理</span><span class="pull-right"><i

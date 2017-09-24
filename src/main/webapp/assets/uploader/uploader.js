@@ -11,7 +11,7 @@ jQuery(function() {
         // swf文件路径，需要用到flash的时候BASE_URL自己根据需要定义 也可写成绝对路径
         swf: ctx + '/assets/common/webuploader-0.1.5/Uploader.swf',
         // 文件接收服务端。此处根据自己的框架写，本人用的是SpringMVC
-        server: '/admin/webUploader',
+        server: '/uploaders/webUploader',
         // 选择文件的按钮。可选。
         // 内部根据当前运行是创建，可能是input元素，也可能是flash.
         // pick: '#picker',
@@ -22,14 +22,14 @@ jQuery(function() {
         },
         duplicate:true,//是否可重复选择同一文件
         chunked: true,  //分片处理
+        chunkRetry: 10, //如果某个分片由于网络问题出错，允许自动重传的次数
         chunkSize: 20 * 1024 * 1024, //每片20M
-        threads:3,//上传并发数。允许同时最大上传进程数。
-        prepareNextFile:true,// 在上传当前文件时，准备好下一个文件
-        // 禁掉全局的拖拽功能。
-        disableGlobalDnd: true
+        threads:3,//上传并发数，允许同时最大上传进程数量。
+        prepareNextFile:true,//在上传当前文件时，准备好下一个文件
+        disableGlobalDnd: true // 禁掉全局的拖拽功能
         /*accept: {
-            //限制上传文件为MP4
-            extensions: 'doc,docx，pdf',
+            //限制上传文件格式
+            extensions: 'doc,docx,pdf',
             mimeTypes: 'doc/docx/pdf'
         }*/
     });
@@ -46,7 +46,6 @@ jQuery(function() {
     uploader.on( 'uploadProgress', function( file, percentage ) {
         var $li = $( '#'+file.id ),
             $percent = $li.find('.progress .progress-bar');
-
         // 避免重复创建
         if ( !$percent.length ) {
             $percent = $('<div class="progress progress-striped active">' +
@@ -54,10 +53,9 @@ jQuery(function() {
                 '</div>' +
                 '</div>').appendTo( $li ).find('.progress-bar');
         }
-
+        //文件上传进度百分比
         $li.find('p.state').text('上传中,已上传'+Math.round(percentage*100)+'%');
-
-        //进度条
+        //进度条渲染
         $percent.css("width",percentage*100+'%');
     });
 
@@ -73,6 +71,7 @@ jQuery(function() {
         $( '#'+file.id ).find('.progress').fadeOut();
     });
 
+    //上传按钮状态
     uploader.on( 'all', function( type ) {
         if ( type === 'startUpload' ) {
             state = 'uploading';
@@ -106,7 +105,7 @@ jQuery(function() {
         } else if (type == "Q_EXCEED_SIZE_LIMIT") {
             layer.msg("文件大小不能超过3G");
         }else {
-            layer.msg("上传出错！请检查后重新上传！错误代码"+type);
+            layer.msg("上传出错！请检查后重新上传！错误代码："+type);
         }
 
     });

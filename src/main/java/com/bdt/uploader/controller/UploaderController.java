@@ -22,7 +22,7 @@ import java.util.List;
  * Created by ZhangHongBo on 2017/9/23.
  */
 @Controller
-@RequestMapping(value = "/uploader")
+@RequestMapping(value = "/uploaders")
 public class UploaderController {
     private static final Logger log= LoggerFactory.getLogger(UploaderController.class);
 
