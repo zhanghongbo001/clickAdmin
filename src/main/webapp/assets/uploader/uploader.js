@@ -11,7 +11,7 @@ jQuery(function() {
         // swf文件路径，需要用到flash的时候BASE_URL自己根据需要定义 也可写成绝对路径
         swf: ctx + '/assets/common/webuploader-0.1.5/Uploader.swf',
         // 文件接收服务端。此处根据自己的框架写，本人用的是SpringMVC
-        server: '/uploaders/webUploader',
+        server: '/uploaders/webuploads',
         // 选择文件的按钮。可选。
         // 内部根据当前运行是创建，可能是input元素，也可能是flash.
         // pick: '#picker',

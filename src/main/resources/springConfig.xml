@@ -83,4 +83,22 @@
         </property>
     </bean>
     <!-- rest json related... end -->
+    <!-- 文件上传解析器 -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="defaultEncoding" value="utf-8"></property>
+        <property name="maxUploadSize" value="10485760000"></property><!-- 最大上传文件大小 -->
+        <property name="maxInMemorySize" value="10960"></property>
+    </bean>
+
+    <!--@value需要参数，这里参数可以是两种形式：@Value("#{configProperties['t1.msgname']}")或者@Value("${t1.msgname}")；-->
+    <bean id="configProperties" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+        <property name="locations">
+            <list>
+                <value>classpath*:properties/jdbc.properties</value>
+            </list>
+        </property>
+    </bean>
+    <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PreferencesPlaceholderConfigurer">
+        <property name="properties" ref="configProperties"/>
+    </bean>
 </beans>

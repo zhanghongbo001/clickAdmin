@@ -1,20 +1,26 @@
 package com.bdt.uploader.controller;
 
+import com.bdt.uploader.biz.UploaderFileService;
+import com.bdt.uploader.config.WebuploaderConfig;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -26,11 +32,9 @@ import java.util.List;
 public class UploaderController {
     private static final Logger log = LoggerFactory.getLogger(UploaderController.class);
 
-    private String id = "";
-    private String fileName = "";
-    // 如果大于1说明是分片处理
-    private int chunks = 1;
-    private int chunk = 0;
+    @Autowired
+    private UploaderFileService uploaderFileService;
+
 
     /**
      * web uploader 上传文件
@@ -40,6 +44,19 @@ public class UploaderController {
     @RequestMapping(value = "/uploader", method = RequestMethod.GET)
     public String uploader() {
         return "WEB-INF/view/uploader/uploader";
+    }
+
+    @RequestMapping(value = "webuploads", method = RequestMethod.POST)
+    @ResponseBody
+    public void webuploads(@RequestParam("file") CommonsMultipartFile multipartFile, @RequestParam(value = "id") String id, @RequestParam(value = "name") String fileNames, @RequestParam(value = "chunks", required = false, defaultValue = "1") int chunks, @RequestParam(value = "chunk", required = false, defaultValue = "0") int chunk)throws IOException {
+        try {
+            if (!multipartFile.isEmpty() && multipartFile != null) {
+                uploaderFileService.saveOneChunk(fileNames, id, multipartFile, chunks, chunk);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.info("上传失败！");
+        }
     }
 
     /**
@@ -52,6 +69,11 @@ public class UploaderController {
     @RequestMapping(method = {RequestMethod.POST}, value = {"/webUploader"})
     @ResponseBody
     public void webUploader(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        String id = "";
+        String fileName = "";
+        // 如果大于1说明是分片处理
+        int chunks = 1;
+        int chunk = 0;
         boolean isMultipart = ServletFileUpload.isMultipartContent(request);
         if (isMultipart) {
             try {
@@ -100,7 +122,7 @@ public class UploaderController {
                 if (uploadDone) {
                     // 得到 destTempFile 就是最终的文件
                     File destTempFile = new File(filePath, realname);
-                    double totleSize = getDirSize(new File(String.valueOf(parentFileDir)));
+                    double totleSize = uploaderFileService.getDirSize(new File(String.valueOf(parentFileDir)));
                     log.info("本次要合并文件夹：{}，大小：{}，合并后的文件名为：{}", parentFileDir.getName(), totleSize, realname);
                     for (int j = 0; j < chunks; j++) {
                         File partFile = new File(parentFileDir, realname + "_" + j + ".part");
@@ -124,29 +146,5 @@ public class UploaderController {
         }
     }
 
-    /**
-     * 获取文件夹大小
-     *
-     * @param file
-     * @return
-     */
-    private static double getDirSize(File file) {
-        //判断文件是否存在
-        if (file.exists()) {
-            //如果是目录则递归计算其内容的总大小
-            if (file.isDirectory()) {
-                File[] children = file.listFiles();
-                double size = 0;
-                for (File f : children)
-                    size += getDirSize(f);
-                return size;
-            } else {//如果是文件则直接返回其大小,以“兆”为单位
-                double size = (double) file.length() / 1024 / 1024;
-                return size;
-            }
-        } else {
-             log.info("文件或者文件夹不存在，请检查路径是否正确！");
-            return 0.0;
-        }
-    }
+
 }
