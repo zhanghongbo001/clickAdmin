@@ -1,7 +1,6 @@
 package com.bdt.uploader.controller;
 
-import com.bdt.uploader.biz.UploaderFileService;
-import com.bdt.uploader.config.WebuploaderConfig;
+import com.bdt.uploader.service.UploaderFileService;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
