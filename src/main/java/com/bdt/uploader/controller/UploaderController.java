@@ -45,17 +45,66 @@ public class UploaderController {
         return "WEB-INF/view/uploader/uploader";
     }
 
+    /**
+     * 保存文件
+     * @param multipartFile
+     * @param id
+     * @param fileNames
+     * @param chunks
+     * @param chunk
+     * @throws IOException
+     */
     @RequestMapping(value = "webuploads", method = RequestMethod.POST)
     @ResponseBody
-    public void webuploads(@RequestParam("file") CommonsMultipartFile multipartFile, @RequestParam(value = "id") String id, @RequestParam(value = "name") String fileNames, @RequestParam(value = "chunks", required = false, defaultValue = "1") int chunks, @RequestParam(value = "chunk", required = false, defaultValue = "0") int chunk)throws IOException {
+    public void webuploads(@RequestParam("file") CommonsMultipartFile multipartFile, @RequestParam(value = "id") String id, @RequestParam(value = "name") String fileNames, @RequestParam(value = "chunks", required = false, defaultValue = "1") int chunks, @RequestParam(value = "chunk", required = false, defaultValue = "0") int chunk,@RequestParam("fileMd5") String fileMd5)throws IOException {
         try {
             if (!multipartFile.isEmpty() && multipartFile != null) {
-                uploaderFileService.saveOneChunk(fileNames, id, multipartFile, chunks, chunk);
+                uploaderFileService.saveOneChunk(fileNames, id, multipartFile, chunks, chunk,fileMd5);
             }
         } catch (Exception e) {
             e.printStackTrace();
             log.info("上传失败！");
         }
+    }
+
+    /**
+     *  合并，验证分片
+     * @param request
+     * @param response
+     */
+    @RequestMapping(value = "/mergeOrCheckChunks",method = RequestMethod.POST)
+    @ResponseBody
+    public void mergeOrCheckChunks(HttpServletRequest request,HttpServletResponse response)throws IOException{
+        String param=request.getParameter("param");
+        String fileName=request.getParameter("fileName");
+        String fileMd5=request.getParameter("fileMd5");
+        if(param.equals("checkChunk")){//是否存在分片文件
+            String jindutiao=request.getParameter("jindutiao");
+            int chunk=Integer.valueOf(request.getParameter("chunk"));
+            String chunkSize=request.getParameter("chunkSize");
+            try{
+                String checkChunk=uploaderFileService.checkChunk(fileName,chunk,chunkSize,fileMd5);
+                response.getWriter().write(checkChunk);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }else if(param.equals("mergeChunks")){//合并分片文件
+            int chunks=Integer.valueOf(request.getParameter("chunks"));
+            uploaderFileService.mergeChunks(fileName, chunks,fileMd5);
+        }
+    }
+
+    /**
+     * 查询当前文件是否上传过，如果上传过，上传进度是多少
+     * @param request
+     */
+    @RequestMapping(value = "selectProgressByFileName",method = RequestMethod.POST)
+    @ResponseBody
+    public String  selectProgressByFileName(HttpServletRequest request){
+        String fileName=request.getParameter("fileName");
+        //TODO 根据fileName 查询要上传的文件
+        String jindutiao="0";
+        return jindutiao;
     }
 
     /**

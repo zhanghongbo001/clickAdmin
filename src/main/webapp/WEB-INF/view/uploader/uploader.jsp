@@ -23,6 +23,8 @@
                     </div>
                 </div>
                 <div  style="width: 400px;height: 400px;">
+                    <!-- 隐藏域 实时保存上传进度 -->
+                    <input id="jindutiao" type="hidden"/>
                     <div id="post-container" class="container">
                         <div class="col-md-9">
                             <div class="page-container">

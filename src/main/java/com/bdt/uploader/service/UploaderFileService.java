@@ -21,7 +21,8 @@ public class UploaderFileService {
 
     //文件上传路径
     private String filePath = "f:\\test\\";
-    private String filePaths= WebuploaderConfig.getTempDirectory();
+    private String filePaths = WebuploaderConfig.getTempDirectory();
+
     /**
      * 最终上传文件
      *
@@ -32,19 +33,42 @@ public class UploaderFileService {
      * @param chunk
      * @throws IOException
      */
-    public void saveOneChunk(final String fileName, final String id, CommonsMultipartFile multipartFile, final int chunks, final int chunk) throws IOException {
-        log.info("地址：{}",filePaths);
+    public void saveOneChunk(final String fileName, final String id, CommonsMultipartFile multipartFile, final int chunks, final int chunk, String fileMd5) throws IOException {
+        log.info("地址：{}", filePaths);
         String destFileName = formatChunkFileName(fileName, chunk);
         //创建新的临时文件夹
-        File parentFileDir = tempDir(id);
+        File parentFileDir = tempDir(fileMd5);
         //将分片存放在临时文件夹中
         File tempPartFile = new File(parentFileDir, destFileName);
         multipartFile.transferTo(tempPartFile);
         //判断分片是否全部存在
-        boolean uploadDone = uploadDones(fileName, chunks, parentFileDir);
-        if(uploadDone){
+       // boolean uploadDone = uploadDones(fileName, chunks, parentFileDir);
+        /*if (uploadDone) {
             //合并分片文件
-            mergeChunks(fileName,chunks,parentFileDir);
+            mergeChunks(fileName, chunks, parentFileDir);
+        }*/
+    }
+
+
+    /**
+     *  分片是否上传过
+     *
+     * @param fileName
+     * @param chunk
+     * @param chunkSize
+     * @param fileMd5
+     * @return
+     */
+    public String checkChunk(String fileName, int chunk, String chunkSize, String fileMd5) {
+        String destFileName = formatChunkFileName(fileName, chunk);
+        File checkFile = new File(filePath + fileMd5 + "\\" + destFileName);
+        //检查文件是否存在，且大小是否一致
+        if (checkFile.exists() && checkFile.length() == Integer.parseInt(chunkSize)) {
+            //上传过
+            return "{\"ifExist\":1}";
+        } else {
+            //没有上传过
+            return "{\"ifExist\":0}";
         }
     }
 
@@ -54,7 +78,7 @@ public class UploaderFileService {
      * @param fileName
      * @param chunks
      */
-    public void mergeChunks(String fileName, int chunks, File parentFileDir) throws IOException {
+    /*public void mergeChunks(String fileName, int chunks, File parentFileDir) throws IOException {
         File destTempFile = new File(filePath, fileName);
         double totleSize = getDirSize(new File(String.valueOf(parentFileDir)));
         log.info("本次要合并文件夹：{}，大小：{}，合并后的文件名为：{}", parentFileDir.getName(), totleSize, fileName);
@@ -69,6 +93,31 @@ public class UploaderFileService {
         // 删除临时目录中的分片文件
         FileUtils.deleteDirectory(parentFileDir);
         log.info("合并完成，已删除已合并的文件：{}", parentFileDir.getName());
+    }*/
+
+
+    /**
+     * 合并分片文件
+     * @param fileName
+     * @param chunks
+     * @param fileMd5
+     * @throws IOException
+     */
+    public void mergeChunks(String fileName, int chunks,String fileMd5) throws IOException {
+        File destTempFile = new File(filePath, fileName);
+        double totleSize = getDirSize(new File(String.valueOf(filePath+fileMd5)));
+        log.info("本次要合并文件夹：{}，大小：{}，合并后的文件名为：{}", fileMd5, totleSize, fileName);
+        for (int j = 0; j < chunks; j++) {
+            String destFileName = formatChunkFileName(fileName, j);
+            File partFile = new File(filePath+fileMd5, destFileName);
+            FileOutputStream destTempfos = new FileOutputStream(destTempFile, true);
+            //遍历"所有分片文件"到"最终文件"中
+            FileUtils.copyFile(partFile, destTempfos);
+            destTempfos.close();
+        }
+        // 删除临时目录中的分片文件
+        FileUtils.deleteDirectory(new File(filePath+fileMd5));
+        log.info("合并完成，已删除已合并的文件：{}", fileMd5);
     }
 
     /**

@@ -1,10 +1,100 @@
 // 文件上传
-jQuery(function() {
-    var $ = jQuery,
-        $list = $('#thelist'),
-        $btn = $('#ctlBtn'),
-        state = 'pending',
-        uploader;
+$(function () {
+    /*******************初始化参数*********************************/
+    var $list = $('#thelist'),//文件列表
+        $btn = $('#ctlBtn'),//开始上传按钮
+        state = 'pending',//初始按钮状态
+        uploader;//uploader对象
+    var fileMd5;  //文件唯一标识
+
+    /******************下面的参数是自定义的*************************/
+    var fileName;//文件名称
+    var chunks; //分片总数量
+    var oldJindu;//如果该文件之前上传过 已经上传的进度是多少
+    var count = 0;//当前正在上传的文件在数组中的下标，一次上传多个文件时使用
+    var filesArr = new Array();//文件数组：每当有文件被添加进队列的时候 就push到数组中
+    var map = {};//key存储文件id，value存储该文件上传过的进度
+
+    /*******************监听分块上传过程中的三个时间点 start************************/
+    WebUploader.Uploader.register({
+            "before-send-file": "beforeSendFile",//整个文件上传前
+            "before-send": "beforeSend",  //每个分片上传前
+            "after-send-file": "afterSendFile",  //分片上传完毕
+        },
+        {
+            //时间点1：所有分块进行上传之前调用此函数
+            beforeSendFile: function (file) {
+                var deferred = WebUploader.Deferred();
+                //1、计算文件的唯一标记fileMd5，用于断点续传  如果.md5File(file)方法里只写一个file参数则计算MD5值会很慢 所以加了后面的参数：10*1024*1024
+                (new WebUploader.Uploader()).md5File(file, 0, 10 * 1024 * 1024).progress(function (percentage) {
+                    $list.find('p.state').text('正在读取文件信息...');
+                }).then(function (val) {
+                    $list.find("p.state").text("成功获取文件信息...");
+                    fileMd5 = val;
+                    //获取文件信息后进入下一步
+                    deferred.resolve();
+                });
+
+                fileName = file.name; //为自定义参数文件名赋值
+                return deferred.promise();
+            },
+            //时间点2：如果有分块上传，则每个分块上传之前调用此函数
+            beforeSend: function (block) {
+                var deferred = WebUploader.Deferred();
+                $.ajax({
+                    type: "POST",
+                    url: "/uploaders/mergeOrCheckChunks?param=checkChunk",  //ajax验证每一个分片
+                    data: {
+                        fileName: fileName,
+                        jindutiao: $("#jindutiao").val(),
+                        fileMd5: fileMd5,  //文件唯一标记
+                        chunk: block.chunk,  //当前分块下标
+                        chunkSize: block.end - block.start//当前分块大小
+                    },
+                    cache: false,
+                    async: false,  // 与js同步
+                    timeout: 1000, //todo 超时的话，只能认为该分片未上传过
+                    dataType: "json",
+                    success: function (response) {
+                        if (response.ifExist) {
+                            //分块存在，跳过
+                            deferred.reject();
+                        } else {
+                            //分块不存在或不完整，重新发送该分块内容
+                            deferred.resolve();
+                        }
+                    }
+                });
+
+                this.owner.options.formData.fileMd5 = fileMd5;
+                chunks = block.chunks;//当前文件共分片数量
+                deferred.resolve();
+                return deferred.promise();
+            },
+            //时间点3：所有分块上传成功后调用此函数
+            afterSendFile: function () {
+                //如果分块上传成功，则通知后台合并分块
+                $.ajax({
+                    type: "POST",
+                    url: "/uploaders/mergeOrCheckChunks?param=mergeChunks",  //ajax将所有片段合并成整体
+                    data: {
+                        fileName: fileName,
+                        fileMd5: fileMd5,
+                        chunks: chunks
+                    },
+                    success: function (data) {
+                        count++; //每上传完成一个文件 count+1
+                        if (count <= filesArr.length - 1) {
+                            uploader.upload(filesArr[count].id);//上传文件列表中的下一个文件
+                        }
+                        //合并成功之后的操作
+                    }
+                });
+            }
+        });
+    /*******************监听分块上传过程中的三个时间点 end************************/
+
+    /*************************** 初始化WebUploader start***************************/
     uploader = WebUploader.create({
         // 不压缩image
         resize: false,
@@ -18,83 +108,164 @@ jQuery(function() {
         pick: {
             id: '#picker',
             label: '选择文件',
-            multiple:true  //默认为true，true表示可以多选文件，HTML5的属性
+            multiple: true  //默认为true，true表示可以多选文件，HTML5的属性
         },
-        duplicate:true,//是否可重复选择同一文件
+        duplicate: true,//是否可重复选择同一文件
         chunked: true,  //分片处理
         chunkRetry: 10, //如果某个分片由于网络问题出错，允许自动重传的次数
-        chunkSize: 20 * 1024 * 1024, //每片20M
-        threads:3,//上传并发数，允许同时最大上传进程数量。
-        prepareNextFile:true,//在上传当前文件时，准备好下一个文件
+        chunkSize: 10 * 1024 * 1024, //每片20M
+        threads: 3,//上传并发数，允许同时最大上传进程数量。
+        prepareNextFile: true,//在上传当前文件时，准备好下一个文件
         disableGlobalDnd: true // 禁掉全局的拖拽功能
         /*accept: {
-            //限制上传文件格式
-            extensions: 'doc,docx,pdf',
-            mimeTypes: 'doc/docx/pdf'
-        }*/
+         //限制上传文件格式
+         extensions: 'doc,docx,pdf',
+         mimeTypes: 'doc/docx/pdf'
+         }*/
     });
+    /*************************** 初始化WebUploader end***************************/
 
     // 当有文件添加进来的时候
-    uploader.on( 'fileQueued', function( file ) {
-        $list.append( '<div id="' + file.id + '" class="item">' +
-            '<h4 class="info">' + file.name + '</h4>' +
-            '<p class="state">等待上传...</p>' +
-            '</div>' );
+    uploader.on('fileQueued', function (file) {
+        //将选择的文件添加进文件数组
+        filesArr.push(file);
+        $.ajax({
+            type: "POST",
+            url: "/uploaders/selectProgressByFileName",  //先检查该文件是否上传过，如果上传过，上传进度是多少
+            data: {
+                fileName: file.name  //文件名
+            },
+            cache: false,
+            async: false,  // 同步
+            dataType: "json",
+            success: function (data) {
+                //上传过
+                if (data > 0) {
+                    //上传过的进度的百分比
+                    oldJindu = data / 100;
+                    //如果上传过 上传了多少
+                    var jindutiaoStyle = "width:" + data + "%";
+                    $list.append('<div id="' + file.id + '" class="item">' +
+                        '<h4 class="info">' + file.name + '</h4>' +
+                        '<p class="state">已上传' + data + '%</p>' +
+                        '<a href="javascript:void(0);" class="btn btn-primary file_btn btnRemoveFile">删除</a>' +
+                        '<div class="progress progress-striped active">' +
+                        '<div class="progress-bar" role="progressbar" style="' + jindutiaoStyle + '">' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>');
+                    //将上传过的进度存入map集合
+                    map[file.id] = oldJindu;
+                } else {//没有上传过
+                    $list.append('<div id="' + file.id + '" class="item">' +
+                        '<h4 class="info">' + file.name + '</h4>' +
+                        '<p class="state">等待上传...</p>' +
+                        '<a href="javascript:void(0);" class="btn btn-primary file_btn btnRemoveFile">删除</a>' +
+                        '</div>');
+                }
+            }
+        });
+        uploader.stop(true);
+        //删除队列中的文件
+        $(".btnRemoveFile").bind("click", function () {
+            var fileItem = $(this).parent();
+            uploader.removeFile($(fileItem).attr("id"), true);
+            $(fileItem).fadeOut(function () {
+                $(fileItem).remove();
+            });
+
+            //数组中的文件也要删除
+            for (var i = 0; i < filesArr.length; i++) {
+                if (filesArr[i].id == $(fileItem).attr("id")) {
+                    filesArr.splice(i, 1);//i是要删除的元素在数组中的下标，1代表从下标位置开始连续删除一个元素
+                }
+            }
+        });
+        /*$list.append('<div id="' + file.id + '" class="item">' +
+         '<h4 class="info">' + file.name + '</h4>' +
+         '<p class="state">等待上传...</p>' +
+         '</div>');*/
     });
 
     // 文件上传过程中创建进度条实时显示。
-    uploader.on( 'uploadProgress', function( file, percentage ) {
-        var $li = $( '#'+file.id ),
+    uploader.on('uploadProgress', function (file, percentage) {
+        var $li = $('#' + file.id),
             $percent = $li.find('.progress .progress-bar');
         // 避免重复创建
-        if ( !$percent.length ) {
+        if (!$percent.length) {
             $percent = $('<div class="progress progress-striped active">' +
                 '<div class="progress-bar" role="progressbar" style="width: 0%">' +
                 '</div>' +
-                '</div>').appendTo( $li ).find('.progress-bar');
+                '</div>').appendTo($li).find('.progress-bar');
         }
-        //文件上传进度百分比
-        $li.find('p.state').text('上传中,已上传'+Math.round(percentage*100)+'%');
-        //进度条渲染
-        $percent.css("width",percentage*100+'%');
+        //将实时进度存入隐藏域
+        $("#jindutiao").val(Math.round(percentage * 100));
+
+        //根据fielId获得当前要上传的文件的进度
+        var oldJinduValue = map[file.id];
+
+        if (percentage < oldJinduValue && oldJinduValue != 1) {
+            $li.find('p.state').text('上传中' + Math.round(oldJinduValue * 100) + '%');
+            $percent.css('width', oldJinduValue * 100 + '%');
+        } else {
+            $li.find('p.state').text('上传中' + Math.round(percentage * 100) + '%');
+            $percent.css('width', percentage * 100 + '%');
+        }
+        /* //文件上传进度百分比
+         $li.find('p.state').text('上传中,已上传' + Math.round(percentage * 100) + '%');
+         //进度条渲染
+         $percent.css("width", percentage * 100 + '%');*/
     });
 
-    uploader.on( 'uploadSuccess', function( file ) {
-        $( '#'+file.id ).find('p.state').text('已上传');
+    uploader.on('uploadSuccess', function (file) {
+        $('#' + file.id).find('p.state').text('文件已上传成功，系统后台正在处理，请稍后...');
     });
 
-    uploader.on( 'uploadError', function( file ) {
-        $( '#'+file.id ).find('p.state').text('上传出错');
+    //上传出错后执行的方法
+    uploader.on('uploadError', function (file) {
+        errorUpload = true;
+        $btn.text('开始上传');
+        uploader.stop(true);
+        $('#' + file.id).find('p.state').text('上传出错，请检查网络连接');
     });
 
-    uploader.on( 'uploadComplete', function( file ) {
-        $( '#'+file.id ).find('.progress').fadeOut();
+    uploader.on('uploadComplete', function (file) {
+        $('#' + file.id).find('.progress').fadeOut();
     });
 
     //上传按钮状态
-    uploader.on( 'all', function( type ) {
-        if ( type === 'startUpload' ) {
+    uploader.on('all', function (type) {
+        if (type === 'startUpload') {
             state = 'uploading';
-        } else if ( type === 'stopUpload' ) {
+        } else if (type === 'stopUpload') {
             state = 'paused';
-        } else if ( type === 'uploadFinished' ) {
+        } else if (type === 'uploadFinished') {
             state = 'done';
         }
 
-        if ( state === 'uploading' ) {
+        if (state === 'uploading') {
             $btn.text('暂停上传');
         } else {
             $btn.text('开始上传');
         }
     });
 
-    $btn.on( 'click', function() {
-        if ( state === 'uploading' ) {
-            uploader.stop();
+    //上传按钮的onclick事件
+    $btn.on('click', function () {
+        if (state === 'uploading') {
+            uploader.stop(true);
         } else {
+            //执行上传
             uploader.upload();
         }
     });
+    /*$btn.on('click', function () {
+     if (state === 'uploading') {
+     uploader.stop();
+     } else {
+     uploader.upload();
+     }
+     });*/
     /**
      * 验证文件格式以及文件大小
      */
@@ -103,8 +274,8 @@ jQuery(function() {
             layer.msg("请上传doc,docx，pdf格式文件");
         } else if (type == "Q_EXCEED_SIZE_LIMIT") {
             layer.msg("文件大小不能超过3G");
-        }else {
-            layer.msg("上传出错！请检查后重新上传！错误代码："+type);
+        } else {
+            layer.msg("上传出错！请检查后重新上传！错误代码：" + type);
         }
 
     });
