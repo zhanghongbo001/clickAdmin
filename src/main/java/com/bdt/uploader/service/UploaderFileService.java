@@ -7,10 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.channels.FileChannel;
 
 /**
  * 使用spring-web CommonsMultipartFile方法处理上传文件
@@ -107,32 +105,39 @@ public class UploaderFileService {
      */
     public void mergeChunks(String fileName, int chunks, String fileMd5) throws IOException {
         File f = new File(filePath + fileMd5);
-        File[] fileArray = f.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File pathname) {
-                if (pathname.isDirectory()) {
-                    return false;
+        if(!f.isDirectory()) {
+            File[] fileArray = f.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File pathname) {
+                    if (pathname.isDirectory()) {
+                        return false;
+                    }
+                    return true;
                 }
-                return true;
+            });
+            if (fileArray.length == chunks) {
+                File destTempFile = new File(filePath, fileName);
+                double totleSize = getDirSize(new File(String.valueOf(filePath + fileMd5)));
+                log.info("本次要合并文件夹：{}，大小：{}，合并后的文件名为：{}", fileMd5, totleSize, fileName);
+                //输出流
+                FileChannel outChnnel = new FileOutputStream(destTempFile).getChannel();
+                FileChannel inChannel;
+                for (int j = 0; j < chunks; j++) {
+                    String destFileName = formatChunkFileName(fileName, j);
+                    File partFile = new File(filePath + fileMd5, destFileName);
+                    inChannel = new FileInputStream(partFile).getChannel();
+                    inChannel.transferTo(0, inChannel.size(), outChnnel);
+                    inChannel.close();
+                }
+                outChnnel.close();
+                // 删除临时目录中的分片文件
+                FileUtils.deleteDirectory(new File(filePath + fileMd5));
+                log.info("合并完成，已删除已合并的文件：{}", fileMd5);
+            } else {
+                log.info("该对象{}，尚未完成上传！", fileName);
             }
-        });
-        if (fileArray.length == chunks) {
-            File destTempFile = new File(filePath, fileName);
-            double totleSize = getDirSize(new File(String.valueOf(filePath + fileMd5)));
-            log.info("本次要合并文件夹：{}，大小：{}，合并后的文件名为：{}", fileMd5, totleSize, fileName);
-            for (int j = 0; j < chunks; j++) {
-                String destFileName = formatChunkFileName(fileName, j);
-                File partFile = new File(filePath + fileMd5, destFileName);
-                FileOutputStream destTempfos = new FileOutputStream(destTempFile, true);
-                //遍历"所有分片文件"到"最终文件"中
-                FileUtils.copyFile(partFile, destTempfos);
-                destTempfos.close();
-            }
-            // 删除临时目录中的分片文件
-            FileUtils.deleteDirectory(new File(filePath + fileMd5));
-            log.info("合并完成，已删除已合并的文件：{}", fileMd5);
-        } else {
-            log.info("该对象{}，尚未完成上传！", fileName);
+        }else{
+            log.info("{}文件不存在！",f.getPath());
         }
     }
 
