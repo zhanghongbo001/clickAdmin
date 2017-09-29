@@ -104,8 +104,9 @@ public class UploaderFileService {
      * @throws IOException
      */
     public void mergeChunks(String fileName, int chunks, String fileMd5) throws IOException {
+        //获取文件夹中文件数量
         File f = new File(filePath + fileMd5);
-        if(!f.isDirectory()) {
+        if(f.exists()) {//判断文件是否存在
             File[] fileArray = f.listFiles(new FileFilter() {
                 @Override
                 public boolean accept(File pathname) {
@@ -115,26 +116,32 @@ public class UploaderFileService {
                     return true;
                 }
             });
-            if (fileArray.length == chunks) {
-                File destTempFile = new File(filePath, fileName);
-                double totleSize = getDirSize(new File(String.valueOf(filePath + fileMd5)));
-                log.info("本次要合并文件夹：{}，大小：{}，合并后的文件名为：{}", fileMd5, totleSize, fileName);
-                //输出流
-                FileChannel outChnnel = new FileOutputStream(destTempFile).getChannel();
-                FileChannel inChannel;
-                for (int j = 0; j < chunks; j++) {
-                    String destFileName = formatChunkFileName(fileName, j);
-                    File partFile = new File(filePath + fileMd5, destFileName);
-                    inChannel = new FileInputStream(partFile).getChannel();
-                    inChannel.transferTo(0, inChannel.size(), outChnnel);
-                    inChannel.close();
+            if (fileArray!=null) {
+                if (fileArray.length == chunks) {
+                    File destTempFile = new File(filePath, fileName);
+                    double totleSize = getDirSize(new File(String.valueOf(filePath + fileMd5)));
+                    log.info("本次要合并文件夹：{}，大小：{}，合并后的文件名为：{}", fileMd5, totleSize, fileName);
+                    //输出流
+                    FileChannel outChnnel = new FileOutputStream(destTempFile).getChannel();
+                    FileChannel inChannel;
+                    long startTime = System.currentTimeMillis();
+                    for (int j = 0; j < chunks; j++) {
+                        String destFileName = formatChunkFileName(fileName, j);
+                        File partFile = new File(filePath + fileMd5, destFileName);
+                        inChannel = new FileInputStream(partFile).getChannel();
+                        inChannel.transferTo(0, inChannel.size(), outChnnel);
+                        inChannel.close();
+                    }
+                    long endTime = System.currentTimeMillis();
+                    outChnnel.close();
+                    // 删除临时目录中的分片文件
+                    FileUtils.deleteDirectory(new File(filePath + fileMd5));
+                    log.info("合并完成，合并文件用时：{}，已删除已合并的文件：{}", (endTime - startTime), fileMd5);
+                } else {
+                    log.info("该对象{}，尚未完成上传！", fileName);
                 }
-                outChnnel.close();
-                // 删除临时目录中的分片文件
-                FileUtils.deleteDirectory(new File(filePath + fileMd5));
-                log.info("合并完成，已删除已合并的文件：{}", fileMd5);
-            } else {
-                log.info("该对象{}，尚未完成上传！", fileName);
+            }else{
+                log.info("该文件夹{}为空！",f.getPath());
             }
         }else{
             log.info("{}文件不存在！",f.getPath());
