@@ -19,7 +19,7 @@ $(function () {
     WebUploader.Uploader.register({
             "before-send-file": "beforeSendFile",//整个文件上传前
             "before-send": "beforeSend",  //每个分片上传前
-            "after-send-file": "afterSendFile",  //分片上传完毕
+            "after-send-file": "afterSendFile"  //分片上传完毕
         },
         {
             //时间点1：所有分块进行上传之前调用此函数
@@ -27,9 +27,9 @@ $(function () {
                 var deferred = WebUploader.Deferred();
                 //1、计算文件的唯一标记fileMd5，用于断点续传  如果.md5File(file)方法里只写一个file参数则计算MD5值会很慢 所以加了后面的参数：10*1024*1024
                 (new WebUploader.Uploader()).md5File(file, 0, 10 * 1024 * 1024).progress(function (percentage) {
-                    $list.find('p.state').text('正在读取文件信息...');
+                    $('#'+file.id).find('p.state').text('正在读取文件信息...');
                 }).then(function (val) {
-                    $list.find("p.state").text("成功获取文件信息...");
+                    $('#'+file.id).find("p.state").text("成功获取文件信息...");
                     fileMd5 = val;
                     //获取文件信息后进入下一步
                     deferred.resolve();
@@ -68,7 +68,6 @@ $(function () {
 
                 this.owner.options.formData.fileMd5 = fileMd5;
                 chunks = block.chunks;//当前文件共分片数量
-                deferred.resolve();
                 return deferred.promise();
             },
             //时间点3：所有分块上传成功后调用此函数
