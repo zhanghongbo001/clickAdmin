@@ -33,13 +33,13 @@ public class UploaderFileService {
      * @throws IOException
      */
     public void saveOneChunk(final String fileName, final String id, CommonsMultipartFile multipartFile, final int chunks, final int chunk, String fileMd5) throws IOException {
-        log.info("地址：{}", filePaths);
         String destFileName = formatChunkFileName(fileName, chunk);
         //创建新的临时文件夹
         File parentFileDir = tempDir(fileMd5);
         //将分片存放在临时文件夹中
         File tempPartFile = new File(parentFileDir, destFileName);
         multipartFile.transferTo(tempPartFile);
+        log.info("创建文件索引为{},内容为：{}",chunk,destFileName);
         //判断分片是否全部存在
         // boolean uploadDone = uploadDones(fileName, chunks, parentFileDir);
         /*if (uploadDone) {
@@ -64,9 +64,11 @@ public class UploaderFileService {
         //检查文件是否存在，且大小是否一致
         if (checkFile.exists() && checkFile.length() == Integer.parseInt(chunkSize)) {
             //上传过
+            log.info("该索引{}文件，已存在，内容为：{}",chunk,destFileName);
             return "{\"ifExist\":1}";
         } else {
             //没有上传过
+            log.info("检索文件索引{}，不存在！",chunk);
             return "{\"ifExist\":0}";
         }
     }
@@ -121,7 +123,7 @@ public class UploaderFileService {
                     File destTempFile = new File(filePath, fileName);
                     double totleSize = getDirSize(new File(String.valueOf(filePath + fileMd5)));
                     log.info("本次要合并文件夹：{}，大小：{}，合并后的文件名为：{}", fileMd5, totleSize, fileName);
-                    //输出流
+                    //多并发线程安全 FileChannel
                     FileChannel outChnnel = new FileOutputStream(destTempFile).getChannel();
                     FileChannel inChannel;
                     long startTime = System.currentTimeMillis();
@@ -136,7 +138,7 @@ public class UploaderFileService {
                     outChnnel.close();
                     // 删除临时目录中的分片文件
                     FileUtils.deleteDirectory(new File(filePath + fileMd5));
-                    log.info("合并完成，合并文件用时：{}，已删除已合并的文件：{}", (endTime - startTime), fileMd5);
+                    log.info("合并完成，合并文件用时：{}ms，已删除已合并的文件：{}", (endTime - startTime), fileMd5);
                 } else {
                     log.info("该对象{}，尚未完成上传！", fileName);
                 }

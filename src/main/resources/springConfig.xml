@@ -18,7 +18,7 @@
     <!-- 启用注解-->
     <context:annotation-config />
     <!--注解扫描类所在的包-->
-    <context:component-scan base-package="com.bdt">
+    <context:component-scan base-package="com.bdt.*">
     </context:component-scan>
     <!-- 启用springmvc 这个非常主要,不然的话你可能从controller中访问不到jsp页面 -->
     <mvc:annotation-driven/>
@@ -29,7 +29,7 @@
         <property name="prefix" value="/"></property>
         <property name="suffix" value=".jsp"></property>
     </bean>
-    <context:property-placeholder location="classpath*:properties/jdbc.properties"></context:property-placeholder>
+    <context:property-placeholder location="classpath*:properties/*.properties"/>
     <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
         <property name="driverClass" value="${jdbcDriver}"/>
         <property name="jdbcUrl" value="${jdbcUrl}"/>
@@ -101,4 +101,17 @@
     <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PreferencesPlaceholderConfigurer">
         <property name="properties" ref="configProperties"/>
     </bean>
+    <!--redis 配置 start-->
+    <bean id="redisUtil" class="com.bdt.framework.common.RedisUtil">
+        <property name="addr" value="${redis.addr}"/>
+        <property name="port" value="${redis.port}"/>
+        <property name="auth" value="${redis.auth}"/>
+        <property name="maxIdle" value="${redis.maxIdle}"/>
+        <property name="maxActive" value="${redis.maxActive}"/>
+        <property name="maxWait" value="${redis.maxWait}"/>
+        <property name="timeOut" value="${redis.timeOut}"/>
+        <property name="testOnBorrow" value="${redis.testOnBorrow}"/>
+    </bean>
+    <!--redis 配置 end-->
+
 </beans>

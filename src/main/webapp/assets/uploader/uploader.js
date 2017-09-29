@@ -113,8 +113,8 @@ $(function () {
         chunked: true,  //分片处理
         chunkRetry: 10, //如果某个分片由于网络问题出错，允许自动重传的次数
         chunkSize: 10 * 1024 * 1024, //每片20M
-        threads: 3,//上传并发数，允许同时最大上传进程数量。
-        prepareNextFile: true,//在上传当前文件时，准备好下一个文件
+        threads: 1,//上传并发数，允许同时最大上传进程数量。
+        prepareNextFile: false,//在上传当前文件时，准备好下一个文件
         disableGlobalDnd: true // 禁掉全局的拖拽功能
         /*accept: {
          //限制上传文件格式
@@ -180,10 +180,6 @@ $(function () {
                 }
             }
         });
-        /*$list.append('<div id="' + file.id + '" class="item">' +
-         '<h4 class="info">' + file.name + '</h4>' +
-         '<p class="state">等待上传...</p>' +
-         '</div>');*/
     });
 
     // 文件上传过程中创建进度条实时显示。
@@ -204,20 +200,16 @@ $(function () {
         var oldJinduValue = map[file.id];
 
         if (percentage < oldJinduValue && oldJinduValue != 1) {
-            $li.find('p.state').text('上传中' + Math.round(oldJinduValue * 100) + '%');
+            $li.find('p.state').text('上传中，已上传' + Math.round(oldJinduValue * 100) + '%');
             $percent.css('width', oldJinduValue * 100 + '%');
         } else {
-            $li.find('p.state').text('上传中' + Math.round(percentage * 100) + '%');
+            $li.find('p.state').text('上传中，已上传' + Math.round(percentage * 100) + '%');
             $percent.css('width', percentage * 100 + '%');
         }
-        /* //文件上传进度百分比
-         $li.find('p.state').text('上传中,已上传' + Math.round(percentage * 100) + '%');
-         //进度条渲染
-         $percent.css("width", percentage * 100 + '%');*/
     });
 
     uploader.on('uploadSuccess', function (file) {
-        $('#' + file.id).find('p.state').text('文件已上传成功，系统后台正在处理，请稍后...');
+        $('#' + file.id).find('p.state').text('文件已上传成功');
     });
 
     //上传出错后执行的方法
@@ -258,13 +250,7 @@ $(function () {
             uploader.upload();
         }
     });
-    /*$btn.on('click', function () {
-     if (state === 'uploading') {
-     uploader.stop();
-     } else {
-     uploader.upload();
-     }
-     });*/
+
     /**
      * 验证文件格式以及文件大小
      */
