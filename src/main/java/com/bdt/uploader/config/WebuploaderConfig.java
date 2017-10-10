@@ -8,18 +8,17 @@ import java.io.File;
 /**
  * Created by ZhangHongBo on 2017/9/25.
  */
-@Service
 public class WebuploaderConfig {
 
     @Value("${'dir.temlDir'}")
-    private static String tempDirectory;
+    private String tempDirectory;
 
     /**
      * 获取上传的临时目录
      *
      * @return
      */
-    public static String getTempDirectory() {
+    public String getTempDirectory() {
         if (tempDirectory != null && !tempDirectory.endsWith(File.separator)) {
             tempDirectory += File.separator;
         }

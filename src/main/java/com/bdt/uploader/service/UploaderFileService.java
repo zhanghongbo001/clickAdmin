@@ -39,7 +39,7 @@ public class UploaderFileService {
         //将分片存放在临时文件夹中
         File tempPartFile = new File(parentFileDir, destFileName);
         multipartFile.transferTo(tempPartFile);
-        log.info("创建文件索引为{},内容为：{}",chunk,destFileName);
+        log.info("开始创建下标索引{},内容：{}",chunk,destFileName);
         //判断分片是否全部存在
         // boolean uploadDone = uploadDones(fileName, chunks, parentFileDir);
         /*if (uploadDone) {
@@ -64,11 +64,11 @@ public class UploaderFileService {
         //检查文件是否存在，且大小是否一致
         if (checkFile.exists() && checkFile.length() == Integer.parseInt(chunkSize)) {
             //上传过
-            log.info("该索引{}文件，已存在，内容为：{}",chunk,destFileName);
+            log.info("{}，分片已存在",destFileName);
             return "{\"ifExist\":1}";
         } else {
             //没有上传过
-            log.info("检索文件索引{}，不存在！",chunk);
+            log.info("下标索引{}不存在！",chunk);
             return "{\"ifExist\":0}";
         }
     }
