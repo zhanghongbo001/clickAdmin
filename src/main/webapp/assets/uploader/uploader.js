@@ -71,7 +71,7 @@ $(function () {
                 return deferred.promise();
             },
             //时间点3：所有分块上传成功后调用此函数
-            afterSendFile: function () {
+            afterSendFile: function (file) {
                 //如果分块上传成功，则通知后台合并分块
                 $.ajax({
                     type: "POST",
@@ -81,12 +81,18 @@ $(function () {
                         fileMd5: fileMd5,
                         chunks: chunks
                     },
-                    success: function (data) {
+                    dataType:"json",
+                    success: function (response) {
                         count++; //每上传完成一个文件 count+1
                         if (count <= filesArr.length - 1) {
                             uploader.upload(filesArr[count].id);//上传文件列表中的下一个文件
                         }
                         //合并成功之后的操作
+                        if(response.ifExist){
+                            $('#' + file.id).find('p.state').text('文件已上传成功');
+                        }else{
+                            $('#' + file.id).find('p.state').text('文件上传失败，请检查网络连接！');
+                        }
                     }
                 });
             }
@@ -129,54 +135,54 @@ $(function () {
         //将选择的文件添加进文件数组
         filesArr.push(file);
         $.ajax({
-            type: "POST",
-            url: "/uploaders/selectProgressByFileName",  //先检查该文件是否上传过，如果上传过，上传进度是多少
-            data: {
-                fileName: file.name  //文件名
+            type:"POST",
+            url:"/uploaders/selectProgressByFileName",  //先检查该文件是否上传过，如果上传过，上传进度是多少
+            data:{
+                fileName : file.name  //文件名
             },
             cache: false,
             async: false,  // 同步
-            dataType: "json",
-            success: function (data) {
+            dataType:"json",
+            success:function(data){
                 //上传过
-                if (data > 0) {
+                if(data>0){
                     //上传过的进度的百分比
-                    oldJindu = data / 100;
+                    oldJindu=data/100;
                     //如果上传过 上传了多少
-                    var jindutiaoStyle = "width:" + data + "%";
-                    $list.append('<div id="' + file.id + '" class="item">' +
+                    var jindutiaoStyle="width:"+data+"%";
+                    $list.append( '<div id="' + file.id + '" class="item">' +
                         '<h4 class="info">' + file.name + '</h4>' +
-                        '<p class="state">已上传' + data + '%</p>' +
+                        '<p class="state">已上传'+data+'%</p>' +
                         '<a href="javascript:void(0);" class="btn btn-primary file_btn btnRemoveFile">删除</a>' +
                         '<div class="progress progress-striped active">' +
-                        '<div class="progress-bar" role="progressbar" style="' + jindutiaoStyle + '">' +
+                        '<div class="progress-bar" role="progressbar" style="'+jindutiaoStyle+'">' +
                         '</div>' +
-                        '</div>' +
-                        '</div>');
+                        '</div>'+
+                        '</div>' );
                     //将上传过的进度存入map集合
-                    map[file.id] = oldJindu;
-                } else {//没有上传过
-                    $list.append('<div id="' + file.id + '" class="item">' +
+                    map[file.id]=oldJindu;
+                }else{//没有上传过
+                    $list.append( '<div id="' + file.id + '" class="item">' +
                         '<h4 class="info">' + file.name + '</h4>' +
                         '<p class="state">等待上传...</p>' +
                         '<a href="javascript:void(0);" class="btn btn-primary file_btn btnRemoveFile">删除</a>' +
-                        '</div>');
+                        '</div>' );
                 }
             }
         });
         uploader.stop(true);
         //删除队列中的文件
-        $(".btnRemoveFile").bind("click", function () {
+        $(".btnRemoveFile").bind("click", function() {
             var fileItem = $(this).parent();
             uploader.removeFile($(fileItem).attr("id"), true);
-            $(fileItem).fadeOut(function () {
+            $(fileItem).fadeOut(function() {
                 $(fileItem).remove();
             });
 
             //数组中的文件也要删除
-            for (var i = 0; i < filesArr.length; i++) {
-                if (filesArr[i].id == $(fileItem).attr("id")) {
-                    filesArr.splice(i, 1);//i是要删除的元素在数组中的下标，1代表从下标位置开始连续删除一个元素
+            for(var i=0;i<filesArr.length;i++){
+                if(filesArr[i].id==$(fileItem).attr("id")){
+                    filesArr.splice(i,1);//i是要删除的元素在数组中的下标，1代表从下标位置开始连续删除一个元素
                 }
             }
         });
@@ -209,7 +215,7 @@ $(function () {
     });
 
     uploader.on('uploadSuccess', function (file) {
-        $('#' + file.id).find('p.state').text('文件已上传成功');
+
     });
 
     //上传出错后执行的方法
@@ -246,8 +252,39 @@ $(function () {
         if (state === 'uploading') {
             uploader.stop(true);
         } else {
-            //执行上传
-            uploader.upload();
+            //当前上传文件的文件名
+            var currentFileName;
+            //当前上传文件的文件id
+            var currentFileId;
+            //count=0 说明没开始传 默认从文件列表的第一个开始传
+            if(count==0){
+                currentFileName=filesArr[0].name;
+                currentFileId=filesArr[0].id;
+            }else{
+                if(count<=filesArr.length-1){
+                    currentFileName=filesArr[count].name;
+                    currentFileId=filesArr[count].id;
+                }
+            }
+            //先查询该文件是否上传过 如果上传过已经上传的进度是多少
+            $.ajax({
+                type:"POST",
+                url:"/uploaders/selectProgressByFileName",
+                data:{
+                    fileName : currentFileName //文件名
+                },
+                cache: false,
+                async: false,  // 同步
+                dataType:"json",
+                success:function(data){
+                    //如果上传过 将进度存入map
+                    if(data>0){
+                        map[currentFileId]=data/100;
+                    }
+                    //执行上传
+                    uploader.upload(currentFileId);
+                }
+            });
         }
     });
 

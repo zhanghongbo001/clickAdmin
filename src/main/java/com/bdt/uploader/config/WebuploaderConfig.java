@@ -10,15 +10,15 @@ import java.io.File;
  */
 public class WebuploaderConfig {
 
-    @Value("${'dir.temlDir'}")
-    private String tempDirectory;
+    @Value("${dir.temlDir}")
+    private static   String tempDirectory;
 
     /**
      * 获取上传的临时目录
      *
      * @return
      */
-    public String getTempDirectory() {
+    public static String getTempDirectory() {
         if (tempDirectory != null && !tempDirectory.endsWith(File.separator)) {
             tempDirectory += File.separator;
         }

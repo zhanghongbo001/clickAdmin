@@ -4,6 +4,7 @@ import com.bdt.uploader.config.WebuploaderConfig;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
@@ -19,8 +20,8 @@ public class UploaderFileService {
     private static final Logger log = LoggerFactory.getLogger(UploaderFileService.class);
 
     //文件上传路径
-    private String filePath = "f:\\test\\";
-    private String filePaths = WebuploaderConfig.getTempDirectory();
+     String filePath = "f:\\test\\";
+     private String filePaths = WebuploaderConfig.getTempDirectory();
 
     /**
      * 最终上传文件
@@ -64,7 +65,7 @@ public class UploaderFileService {
         //检查文件是否存在，且大小是否一致
         if (checkFile.exists() && checkFile.length() == Integer.parseInt(chunkSize)) {
             //上传过
-            log.info("{}，分片已存在",destFileName);
+            log.info("索引{}，分片已存在",chunk);
             return "{\"ifExist\":1}";
         } else {
             //没有上传过
@@ -105,7 +106,7 @@ public class UploaderFileService {
      * @param fileMd5
      * @throws IOException
      */
-    public void mergeChunks(String fileName, int chunks, String fileMd5) throws IOException {
+    public String mergeChunks(String fileName, int chunks, String fileMd5) throws IOException {
         //获取文件夹中文件数量
         File f = new File(filePath + fileMd5);
         if(f.exists()) {//判断文件是否存在
@@ -139,14 +140,18 @@ public class UploaderFileService {
                     // 删除临时目录中的分片文件
                     FileUtils.deleteDirectory(new File(filePath + fileMd5));
                     log.info("合并完成，合并文件用时：{}ms，已删除已合并的文件：{}", (endTime - startTime), fileMd5);
+                    return "{\"ifExist\":1}";
                 } else {
                     log.info("该对象{}，尚未完成上传！", fileName);
+                    return "{\"ifExist\":0}";
                 }
             }else{
                 log.info("该文件夹{}为空！",f.getPath());
+                return "{\"ifExist\":0}";
             }
         }else{
             log.info("{}文件不存在！",f.getPath());
+            return "{\"ifExist\":0}";
         }
     }
 

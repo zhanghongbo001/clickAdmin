@@ -90,7 +90,8 @@ public class UploaderController {
             }
         }else if(param.equals("mergeChunks")){//合并分片文件
             int chunks=Integer.valueOf(request.getParameter("chunks"));
-            uploaderFileService.mergeChunks(fileName, chunks,fileMd5);
+            String statc=uploaderFileService.mergeChunks(fileName, chunks,fileMd5);
+            response.getWriter().write(statc);
         }
     }
 
