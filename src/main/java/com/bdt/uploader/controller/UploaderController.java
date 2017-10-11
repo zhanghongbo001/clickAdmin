@@ -79,7 +79,6 @@ public class UploaderController {
         String fileName=request.getParameter("fileName");
         String fileMd5=request.getParameter("fileMd5");
         if(param.equals("checkChunk")){//是否存在分片文件
-            String jindutiao=request.getParameter("jindutiao");
             int chunk=Integer.valueOf(request.getParameter("chunk"));
             String chunkSize=request.getParameter("chunkSize");
             try{

@@ -63,7 +63,7 @@ $(function () {
                     type: "POST",
                     url: "/uploaders/mergeOrCheckChunks?param=mergeChunks",  //ajax将所有片段合并成整体
                     data: {
-                        fileName: block.filename,
+                        fileName: block.name,
                         fileMd5: block.fileMd5,
                         chunks: block.chunks
                     },
@@ -76,6 +76,7 @@ $(function () {
                         //合并成功之后的操作
                         if (response.ifExist) {
                             $('#' + block.id).find('p.state').text('文件已上传成功');
+
                         } else {
                             $('#' + block.id).find('p.state').text('文件上传失败，请检查网络连接！');
                         }
@@ -137,9 +138,9 @@ $(function () {
                         //上传过的进度的百分比
                         oldJindu = data;
                         //文件总大小，单位：MB(兆)
-                        var fileSize=file.size/(1024*1024);
-                        //上传进度百分比
-                        var bf=Math.round((oldJindu/fileSize)*100);
+                        var fileSize = file.size / (1024 * 1024);
+                        //计算上传进度百分比
+                        var bf = Math.round((oldJindu / fileSize) * 100);
                         //如果上传过 上传了多少
                         var jindutiaoStyle = "width:" + bf + "%";
                         $list.append('<div id="' + file.id + '" class="item">' +
@@ -152,7 +153,7 @@ $(function () {
                             '</div>' +
                             '</div>');
                         //将上传过的进度存入map集合
-                        map[file.id] = oldJindu;
+                        map[file.id] = bf;
                     } else {//没有上传过
                         $list.append('<div id="' + file.id + '" class="item">' +
                             '<h4 class="info">' + file.name + '</h4>' +
@@ -162,23 +163,24 @@ $(function () {
                     }
                 }
             });
-        });
-        uploader.stop(true);
-        //删除队列中的文件
-        $(".btnRemoveFile").bind("click", function () {
-            var fileItem = $(this).parent();
-            uploader.removeFile($(fileItem).attr("id"), true);
-            $(fileItem).fadeOut(function () {
-                $(fileItem).remove();
-            });
+            uploader.stop(true);
+            //删除队列中的文件
+            $(".btnRemoveFile").bind("click", function () {
+                var fileItem = $(this).parent();
+                uploader.removeFile($(fileItem).attr("id"), true);
+                $(fileItem).fadeOut(function () {
+                    $(fileItem).remove();
+                });
 
-            //数组中的文件也要删除
-            for (var i = 0; i < filesArr.length; i++) {
-                if (filesArr[i].id == $(fileItem).attr("id")) {
-                    filesArr.splice(i, 1);//i是要删除的元素在数组中的下标，1代表从下标位置开始连续删除一个元素
+                //数组中的文件也要删除
+                for (var i = 0; i < filesArr.length; i++) {
+                    if (filesArr[i].id == $(fileItem).attr("id")) {
+                        filesArr.splice(i, 1);//i是要删除的元素在数组中的下标，1代表从下标位置开始连续删除一个元素
+                    }
                 }
-            }
+            });
         });
+
     });
 
     // 文件上传过程中创建进度条实时显示。
@@ -192,23 +194,27 @@ $(function () {
                 '</div>' +
                 '</div>').appendTo($li).find('.progress-bar');
         }
-        //将实时进度存入隐藏域
-        $("#jindutiao").val(Math.round(percentage * 100));
-
         //根据fielId获得当前要上传的文件的进度
-        var oldJinduValue = map[file.id];
-
-        if (percentage < oldJinduValue && oldJinduValue != 1) {
-            $li.find('p.state').text('上传中，已上传' + Math.round(oldJinduValue * 100) + '%');
-            $percent.css('width', oldJinduValue * 100 + '%');
+        if (percentage < map[file.id] && map[file.id] != 1) {
+            //实时更新上传进度
+            if(map[file.id]<=Math.round(percentage * 100)){
+                map[file.id]=Math.round(percentage * 100);
+                $li.find('p.state').text('上传中，已上传' + map[file.id] + '%');
+                $percent.css('width', map[file.id] + '%');
+            }
         } else {
             $li.find('p.state').text('上传中，已上传' + Math.round(percentage * 100) + '%');
             $percent.css('width', percentage * 100 + '%');
         }
+
     });
 
+    //上传成功后执行
     uploader.on('uploadSuccess', function (file) {
-
+        //删除（删除）按钮
+        $(".btnRemoveFile").remove();
+        //删除进度条
+        $(".progress-bar").parent().remove();
     });
 
     //上传出错后执行的方法

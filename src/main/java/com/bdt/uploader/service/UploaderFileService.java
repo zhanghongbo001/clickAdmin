@@ -22,8 +22,8 @@ public class UploaderFileService {
 
     private WebuploaderConfig webuploaderConfig;
     //文件上传路径
-     String filePath = "f:\\test\\";
-     String filePaths = webuploaderConfig.getTempDirectory();
+    String filePath = "f:\\test\\";
+//     String filePaths = webuploaderConfig.getTempDirectory();
 
     /**
      * 最终上传文件
@@ -36,15 +36,15 @@ public class UploaderFileService {
      * @throws IOException
      */
     public void saveOneChunk(final String fileName, final String id, CommonsMultipartFile multipartFile, final int chunks, final int chunk, String fileMd5) throws IOException {
-        if(filePath!=null&&!filePath.equals("")){
+        if (filePath != null && !filePath.equals("")) {
             String destFileName = formatChunkFileName(fileName, chunk);
             //创建新的临时文件夹
             File parentFileDir = tempDir(fileMd5);
             //将分片存放在临时文件夹中
             File tempPartFile = new File(parentFileDir, destFileName);
             multipartFile.transferTo(tempPartFile);
-            log.info("开始创建下标索引{},内容：{}",chunk,destFileName);
-        }else{
+            log.info("开始创建下标索引{},内容：{}", chunk, destFileName);
+        } else {
             log.info("上传文件路径不能为空！");
         }
     }
@@ -62,15 +62,15 @@ public class UploaderFileService {
     public String checkChunk(String fileName, int chunk, String chunkSize, String fileMd5) {
         String destFileName = formatChunkFileName(fileName, chunk);
         File checkFile = new File(filePath + fileMd5 + "\\" + destFileName);
-        log.info("验证分片地址：{}",checkFile);
+        log.info("验证分片地址：{}", checkFile);
         //检查文件是否存在，且大小是否一致
         if (checkFile.exists() && checkFile.length() == Integer.parseInt(chunkSize)) {
             //上传过
-            log.info("{},分片已存在!",destFileName);
+            log.info("{},分片已存在!", destFileName);
             return "{\"ifExist\":1}";
         } else {
             //没有上传过
-            log.info("下标索引{}不存在！",chunk);
+            log.info("下标索引{}不存在！", chunk);
             return "{\"ifExist\":0}";
         }
     }
@@ -86,7 +86,7 @@ public class UploaderFileService {
     public String mergeChunks(String fileName, int chunks, String fileMd5) throws IOException {
         //获取文件夹中文件数量
         File f = new File(filePath + fileMd5);
-        if(f.exists()) {//判断文件是否存在
+        if (f.exists()) {//判断文件是否存在
             File[] fileArray = f.listFiles(new FileFilter() {
                 @Override
                 public boolean accept(File pathname) {
@@ -96,7 +96,7 @@ public class UploaderFileService {
                     return true;
                 }
             });
-            if (fileArray!=null) {
+            if (fileArray != null) {
                 if (fileArray.length == chunks) {
                     File destTempFile = new File(filePath, fileName);
                     double totleSize = getDirSize(new File(String.valueOf(filePath + fileMd5)));
@@ -122,12 +122,12 @@ public class UploaderFileService {
                     log.info("该对象{}，尚未完成上传！", fileName);
                     return "{\"ifExist\":0}";
                 }
-            }else{
-                log.info("该文件夹{}为空！",f.getPath());
+            } else {
+                log.info("该文件夹{}为空！", f.getPath());
                 return "{\"ifExist\":0}";
             }
-        }else{
-            log.info("{}文件不存在！",f.getPath());
+        } else {
+            log.info("{}文件不存在！", f.getPath());
             return "{\"ifExist\":0}";
         }
     }
@@ -189,15 +189,16 @@ public class UploaderFileService {
 
     /**
      * 上传进度
+     *
      * @param fileMd5
      * @return
      */
-    public String selectProgressByFileName(String fileMd5){
-        File file=new File(filePath+fileMd5);
-        if(file.exists()){//文件分片是否存在，如果存在计算大小
+    public String selectProgressByFileName(String fileMd5) {
+        File file = new File(filePath + fileMd5);
+        if (file.exists()) {//文件分片是否存在，如果存在计算大小
             String fileSize = String.valueOf(getDirSize(file));
             return fileSize;
-        }else{
+        } else {
             return "0.0";
         }
     }
