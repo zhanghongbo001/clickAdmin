@@ -102,10 +102,9 @@ public class UploaderController {
     @RequestMapping(value = "selectProgressByFileName",method = RequestMethod.POST)
     @ResponseBody
     public String  selectProgressByFileName(HttpServletRequest request){
-        String fileName=request.getParameter("fileName");
-        //TODO 根据fileName 查询要上传的文件
-        String jindutiao="0";
-        return jindutiao;
+        String fileMd5=request.getParameter("fileMd5");
+        String fileSize=uploaderFileService.selectProgressByFileName(fileMd5);
+        return fileSize;
     }
 
     /**
