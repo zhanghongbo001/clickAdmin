@@ -22,20 +22,18 @@ public class UploaderFileService {
 
     private WebuploaderConfig webuploaderConfig;
     //文件上传路径
-    String filePath = "f:\\test\\";
+    String filePath = "d:\\test\\";
 //     String filePaths = webuploaderConfig.getTempDirectory();
 
     /**
      * 最终上传文件
      *
      * @param fileName
-     * @param id
      * @param multipartFile
-     * @param chunks
      * @param chunk
      * @throws IOException
      */
-    public void saveOneChunk(final String fileName, final String id, CommonsMultipartFile multipartFile, final int chunks, final int chunk, String fileMd5) throws IOException {
+    public void saveOneChunk(final String fileName, CommonsMultipartFile multipartFile, final int chunk, String fileMd5) throws IOException {
         if (filePath != null && !filePath.equals("")) {
             String destFileName = formatChunkFileName(fileName, chunk);
             //创建新的临时文件夹

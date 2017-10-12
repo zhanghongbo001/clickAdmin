@@ -4,7 +4,6 @@
 <html lang="zh_CN">
 <%@include file="/WEB-INF/view/layout/header.jsp" %>
 <!-- laypage css-->
-<link rel="stylesheet" href="${ctx}/assets/common/lib/laypage/skin/laypage.css">
 <link rel="stylesheet" href="${ctx}/assets/common/webuploader-0.1.5/webuploader.css">
 <!--引入JS-->
 <script type="text/javascript" src="${ctx}/assets/common/webuploader-0.1.5/jquery-1.10.2.min.js"></script>
@@ -23,8 +22,6 @@
                     </div>
                 </div>
                 <div  style="width: 400px;height: 400px;">
-                    <!-- 隐藏域 实时保存上传进度 -->
-                    <input id="jindutiao" type="hidden"/>
                     <div id="post-container" class="container">
                         <div class="col-md-9">
                             <div class="page-container">

@@ -32,6 +32,7 @@
                 /activation=anon
                 /logout.html = anon
                 /assets/**=anon
+                /uploaders/**=anon
                 /** = authc
             </value>
         </property>

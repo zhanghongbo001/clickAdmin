@@ -48,18 +48,16 @@ public class UploaderController {
     /**
      * 保存文件
      * @param multipartFile
-     * @param id
      * @param fileNames
-     * @param chunks
      * @param chunk
      * @throws IOException
      */
     @RequestMapping(value = "webuploads", method = RequestMethod.POST)
     @ResponseBody
-    public void webuploads(@RequestParam("file") CommonsMultipartFile multipartFile, @RequestParam(value = "id") String id, @RequestParam(value = "name") String fileNames, @RequestParam(value = "chunks", required = false, defaultValue = "1") int chunks, @RequestParam(value = "chunk", required = false, defaultValue = "0") int chunk,@RequestParam("fileMd5") String fileMd5)throws IOException {
+    public void webuploads(@RequestParam("file") CommonsMultipartFile multipartFile, @RequestParam(value = "name") String fileNames, @RequestParam(value = "chunk", required = false, defaultValue = "0") int chunk,@RequestParam("fileMd5") String fileMd5)throws Exception {
         try {
             if (!multipartFile.isEmpty() && multipartFile != null) {
-                uploaderFileService.saveOneChunk(fileNames, id, multipartFile, chunks, chunk,fileMd5);
+                uploaderFileService.saveOneChunk(fileNames, multipartFile, chunk,fileMd5);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -74,7 +72,7 @@ public class UploaderController {
      */
     @RequestMapping(value = "/mergeOrCheckChunks",method = RequestMethod.POST)
     @ResponseBody
-    public void mergeOrCheckChunks(HttpServletRequest request,HttpServletResponse response)throws IOException{
+    public void mergeOrCheckChunks(HttpServletRequest request,HttpServletResponse response)throws Exception{
         String param=request.getParameter("param");
         String fileName=request.getParameter("fileName");
         String fileMd5=request.getParameter("fileMd5");
@@ -100,7 +98,7 @@ public class UploaderController {
      */
     @RequestMapping(value = "selectProgressByFileName",method = RequestMethod.POST)
     @ResponseBody
-    public String  selectProgressByFileName(HttpServletRequest request){
+    public String  selectProgressByFileName(HttpServletRequest request)throws Exception{
         String fileMd5=request.getParameter("fileMd5");
         String fileSize=uploaderFileService.selectProgressByFileName(fileMd5);
         return fileSize;
@@ -113,7 +111,7 @@ public class UploaderController {
      * @param response
      * @throws Exception
      */
-    @RequestMapping(method = {RequestMethod.POST}, value = {"/webUploader"})
+    /*@RequestMapping(method = {RequestMethod.POST}, value = {"/webUploader"})
     @ResponseBody
     public void webUploader(HttpServletRequest request, HttpServletResponse response) throws Exception {
         String id = "";
@@ -192,6 +190,6 @@ public class UploaderController {
             }
         }
     }
-
+*/
 
 }
