@@ -252,21 +252,46 @@ $(function () {
             uploader.stop(true);
         } else {
             //当前上传文件的文件名
-            var currentFileName;
+            var currentFileMd5;
             //当前上传文件的文件id
             var currentFileId;
+            //当前上传文件总大小
+            var currentFileSize;
             //count=0 说明没开始传 默认从文件列表的第一个开始传
             if (count == 0) {
-                currentFileName = filesArr[0].name;
+                currentFileMd5 = filesArr[0].fileMd5;
                 currentFileId = filesArr[0].id;
+                currentFileSize=filesArr[0].size;
             } else {
                 if (count <= filesArr.length - 1) {
-                    currentFileName = filesArr[count].name;
+                    currentFileMd5 = filesArr[count].fileMd5;
                     currentFileId = filesArr[count].id;
+                    currentFileSize=filesArr[count].size;
                 }
             }
-            //执行上传
-            uploader.upload(currentFileId);
+            //先查询该文件是否上传过 如果上传过已经上传的进度是多少
+            $.ajax({
+                type:"POST",
+                url:"${ctx}/testController/selectProgressByFileName.do",
+                data:{
+                    fileName : currentFileMd5//文件名
+                },
+                cache: false,
+                async: false,  // 同步
+                dataType:"json",
+                success:function(data){
+                    //如果上传过 将进度存入map
+                    if(data>0){
+                        //文件总大小，单位：MB(兆)
+                        var fileSize = currentFileSize / (1024 * 1024);
+                        //计算上传进度百分比
+                        var bf = Math.round((data / fileSize) * 100);
+                        map[currentFileId]=bf;
+                    }
+                    //执行上传
+                    uploader.upload(currentFileId);
+                }
+            });
         }
     });
 
