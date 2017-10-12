@@ -269,29 +269,8 @@ $(function () {
                     currentFileSize=filesArr[count].size;
                 }
             }
-            //先查询该文件是否上传过 如果上传过已经上传的进度是多少
-            $.ajax({
-                type:"POST",
-                url:"${ctx}/testController/selectProgressByFileName.do",
-                data:{
-                    fileName : currentFileMd5//文件名
-                },
-                cache: false,
-                async: false,  // 同步
-                dataType:"json",
-                success:function(data){
-                    //如果上传过 将进度存入map
-                    if(data>0){
-                        //文件总大小，单位：MB(兆)
-                        var fileSize = currentFileSize / (1024 * 1024);
-                        //计算上传进度百分比
-                        var bf = Math.round((data / fileSize) * 100);
-                        map[currentFileId]=bf;
-                    }
-                    //执行上传
-                    uploader.upload(currentFileId);
-                }
-            });
+            //执行上传
+            uploader.upload(currentFileId);
         }
     });
 

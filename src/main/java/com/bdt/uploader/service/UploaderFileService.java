@@ -22,7 +22,7 @@ public class UploaderFileService {
 
     private WebuploaderConfig webuploaderConfig;
     //文件上传路径
-    String filePath = "d:\\test\\";
+    String filePath = "f:\\test\\";
 //     String filePaths = webuploaderConfig.getTempDirectory();
 
     /**
@@ -99,19 +99,16 @@ public class UploaderFileService {
                     File destTempFile = new File(filePath, fileName);
                     double totleSize = getDirSize(new File(String.valueOf(filePath + fileMd5)));
                     log.info("本次要合并文件夹：{}，大小：{}，合并后的文件名为：{}", fileMd5, totleSize, fileName);
-                    //多并发线程安全 FileChannel
-                    FileChannel outChnnel = new FileOutputStream(destTempFile).getChannel();
-                    FileChannel inChannel;
                     long startTime = System.currentTimeMillis();
                     for (int j = 0; j < chunks; j++) {
                         String destFileName = formatChunkFileName(fileName, j);
                         File partFile = new File(filePath + fileMd5, destFileName);
-                        inChannel = new FileInputStream(partFile).getChannel();
-                        inChannel.transferTo(0, inChannel.size(), outChnnel);
-                        inChannel.close();
+                        FileOutputStream destTempfos = new FileOutputStream(destTempFile, true);
+                        //遍历"所有分片文件"到"最终文件"中
+                        FileUtils.copyFile(partFile, destTempfos);
+                        destTempfos.close();
                     }
                     long endTime = System.currentTimeMillis();
-                    outChnnel.close();
                     // 删除临时目录中的分片文件
                     FileUtils.deleteDirectory(new File(filePath + fileMd5));
                     log.info("合并完成，合并文件用时：{}ms，已删除已合并的文件：{}", (endTime - startTime), fileMd5);
