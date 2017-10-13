@@ -39,7 +39,8 @@ $(function () {
                         chunkSize: block.end - block.start//当前分块大小
                     },
                     cache: false,
-                    async: false,  // 与js同步
+                    async: false,
+                    timeout: 1000,//超时的话，只能认为该分片未上传过
                     dataType: "json",
                     success: function (response) {
                         if (response.ifExist) {
@@ -197,8 +198,8 @@ $(function () {
         //根据fielId获得当前要上传的文件的进度
         if (percentage < map[file.id] && map[file.id] != 1) {
             //实时更新上传进度
-            if(map[file.id]<=Math.round(percentage * 100)){
-                map[file.id]=Math.round(percentage * 100);
+            if (map[file.id] <= Math.round(percentage * 100)) {
+                map[file.id] = Math.round(percentage * 100);
                 $li.find('p.state').text('上传中，已上传' + map[file.id] + '%');
                 $percent.css('width', map[file.id] + '%');
             }
@@ -261,16 +262,38 @@ $(function () {
             if (count == 0) {
                 currentFileMd5 = filesArr[0].fileMd5;
                 currentFileId = filesArr[0].id;
-                currentFileSize=filesArr[0].size;
+                currentFileSize = filesArr[0].size;
             } else {
                 if (count <= filesArr.length - 1) {
                     currentFileMd5 = filesArr[count].fileMd5;
                     currentFileId = filesArr[count].id;
-                    currentFileSize=filesArr[count].size;
+                    currentFileSize = filesArr[count].size;
                 }
             }
-            //执行上传
-            uploader.upload(currentFileId);
+            //先查询该文件是否上传过 如果上传过已经上传的进度是多少
+            $.ajax({
+                type: "POST",
+                url: "/uploaders/selectProgressByFileName",
+                data: {
+                    fileMd5: currentFileMd5
+                },
+                cache: false,
+                async: false,  // 同步
+                dataType: "json",
+                success: function (data) {
+                    //如果上传过 将进度存入map
+                    if (data > 0) {
+                        //文件总大小，单位：MB(兆)
+                        var fileSize = currentFileSize / (1024 * 1024);
+                        //计算上传进度百分比
+                        var bf = Math.round((data / fileSize) * 100);
+                        //更新该文件上传进度存入map集合
+                        map[currentFileId] = bf;
+                    }
+                    //执行上传
+                    uploader.upload(currentFileId);
+                }
+            });
         }
     });
 
