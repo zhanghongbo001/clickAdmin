@@ -98,7 +98,7 @@ public class UploaderFileService {
                 if (fileArray.length == chunks) {
                     File destTempFile = new File(filePath, fileName);
                     double totleSize = getDirSize(new File(String.valueOf(filePath + fileMd5)));
-                    log.info("本次要合并文件夹：{}，大小：{}，合并后的文件名为：{}", fileMd5, totleSize, fileName);
+                    log.info("本次要合并文件夹：{}，大小：{}MB，合并后的文件名为：{}", fileMd5, totleSize, fileName);
                     long startTime = System.currentTimeMillis();
                     for (int j = 0; j < chunks; j++) {
                         String destFileName = formatChunkFileName(fileName, j);

@@ -52,7 +52,6 @@ $(function () {
                         }
                     }
                 });
-
                 this.owner.options.formData.fileMd5 = block.file.fileMd5;
                 block.file.chunks = block.chunks;//当前文件共分片数量
                 return deferred.promise();
@@ -106,7 +105,7 @@ $(function () {
         duplicate: true,//是否可重复选择同一文件
         chunked: true,  //分片处理
         chunkRetry: 10, //如果某个分片由于网络问题出错，允许自动重传的次数
-        chunkSize: 10 * 1024 * 1024, //每片20M
+        chunkSize: 1 * 1024 * 1024, //每片20M
         threads: 3,//上传并发数，允许同时最大上传进程数量。
         prepareNextFile: true,//在上传当前文件时，准备好下一个文件
         disableGlobalDnd: true // 禁掉全局的拖拽功能
@@ -122,7 +121,7 @@ $(function () {
     uploader.on('fileQueued', function (file) {
         //将选择的文件添加进文件数组
         filesArr.push(file);
-        uploader.md5File(file, 0, 10 * 1024 * 1024).progress().then(function (val) {
+        uploader.md5File(file).progress().then(function (val) {
             file.fileMd5 = val;
             $.ajax({
                 type: "POST",
@@ -164,7 +163,6 @@ $(function () {
                     }
                 }
             });
-            uploader.stop(true);
             //删除队列中的文件
             $(".btnRemoveFile").bind("click", function () {
                 var fileItem = $(this).parent();
