@@ -20,10 +20,8 @@ import java.text.DecimalFormat;
 public class UploaderFileService {
     private static final Logger log = LoggerFactory.getLogger(UploaderFileService.class);
 
+    @Autowired
     private WebuploaderConfig webuploaderConfig;
-    //文件上传路径
-    String filePath = "f:\\test\\";
-//     String filePaths = webuploaderConfig.getTempDirectory();
 
     /**
      * 最终上传文件
@@ -34,6 +32,7 @@ public class UploaderFileService {
      * @throws IOException
      */
     public void saveOneChunk(final String fileName, CommonsMultipartFile multipartFile, final int chunk, String fileMd5) throws IOException {
+        String filePath=webuploaderConfig.getTempDir();
         if (filePath != null && !filePath.equals("")) {
             String destFileName = formatChunkFileName(fileName, chunk);
             //创建新的临时文件夹
@@ -58,6 +57,7 @@ public class UploaderFileService {
      * @return
      */
     public String checkChunk(String fileName, int chunk, String chunkSize, String fileMd5) {
+        String filePath=webuploaderConfig.getTempDir();
         String destFileName = formatChunkFileName(fileName, chunk);
         File checkFile = new File(filePath + fileMd5 + "\\" + destFileName);
         log.info("验证分片地址：{}", checkFile);
@@ -82,6 +82,7 @@ public class UploaderFileService {
      * @throws IOException
      */
     public String mergeChunks(String fileName, int chunks, String fileMd5) throws IOException {
+        String filePath=webuploaderConfig.getTempDir();
         //获取文件夹中文件数量
         File f = new File(filePath + fileMd5);
         if (f.exists()) {//判断文件是否存在
@@ -145,6 +146,7 @@ public class UploaderFileService {
      * @return
      */
     private File tempDir(String fileMd5) {
+        String filePath=webuploaderConfig.getTempDir();
         // 临时目录用来存放所有分片文件
         String tempFileDir = filePath + fileMd5;
         File parentFileDir = new File(tempFileDir);
@@ -189,6 +191,7 @@ public class UploaderFileService {
      * @return
      */
     public String selectProgressByFileName(String fileMd5) {
+        String filePath=webuploaderConfig.getTempDir();
         File file = new File(filePath + fileMd5);
         if (file.exists()) {//文件分片是否存在，如果存在计算大小
             String fileSize = String.valueOf(getDirSize(file));
