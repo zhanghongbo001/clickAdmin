@@ -163,25 +163,25 @@ $(function () {
                     }
                 }
             });
-            //删除队列中的文件
-            $(".btnRemoveFile").bind("click", function () {
-                var fileItem = $(this).parent();
-                uploader.removeFile($(fileItem).attr("id"), true);
-                $(fileItem).fadeOut(function () {
-                    $(fileItem).remove();
-                });
-
-                //数组中的文件也要删除
-                for (var i = 0; i < filesArr.length; i++) {
-                    if (filesArr[i].id == $(fileItem).attr("id")) {
-                        filesArr.splice(i, 1);//i是要删除的元素在数组中的下标，1代表从下标位置开始连续删除一个元素
-                    }
-                }
-            });
         });
-
     });
 
+    //删除队列中的文件
+    $("body").delegate(".btnRemoveFile","click",function(){
+        var $this = $(event.target);
+        var fileItem = $this.parent();
+        var rmFileId = $(fileItem).attr("id");
+        //删除内存文件
+        uploader.removeFile(rmFileId, true);
+        $("#"+rmFileId,"#uploader").remove();
+        //数组中的文件也要删除
+        for (var i = 0; i < filesArr.length; i++) {
+            if (filesArr[i].id == $(fileItem).attr("id")) {
+                filesArr.splice(i, 1);//i是要删除的元素在数组中的下标，1代表从下标位置开始连续删除一个元素
+            }
+        }
+
+    });
     // 文件上传过程中创建进度条实时显示。
     uploader.on('uploadProgress', function (file, percentage) {
         var $li = $('#' + file.id),
@@ -257,41 +257,43 @@ $(function () {
             //当前上传文件总大小
             var currentFileSize;
             //count=0 说明没开始传 默认从文件列表的第一个开始传
-            if (count == 0) {
-                currentFileMd5 = filesArr[0].fileMd5;
-                currentFileId = filesArr[0].id;
-                currentFileSize = filesArr[0].size;
-            } else {
-                if (count <= filesArr.length - 1) {
-                    currentFileMd5 = filesArr[count].fileMd5;
-                    currentFileId = filesArr[count].id;
-                    currentFileSize = filesArr[count].size;
-                }
-            }
-            //先查询该文件是否上传过 如果上传过已经上传的进度是多少
-            $.ajax({
-                type: "POST",
-                url: "/uploaders/selectProgressByFileName",
-                data: {
-                    fileMd5: currentFileMd5
-                },
-                cache: false,
-                async: false,  // 同步
-                dataType: "json",
-                success: function (data) {
-                    //如果上传过 将进度存入map
-                    if (data > 0) {
-                        //文件总大小，单位：MB(兆)
-                        var fileSize = currentFileSize / (1024 * 1024);
-                        //计算上传进度百分比
-                        var bf = Math.round((data / fileSize) * 100);
-                        //更新该文件上传进度存入map集合
-                        map[currentFileId] = bf;
+            if(filesArr.length){
+                if (count == 0) {
+                    currentFileMd5 = filesArr[0].fileMd5;
+                    currentFileId = filesArr[0].id;
+                    currentFileSize = filesArr[0].size;
+                } else {
+                    if (count <= filesArr.length - 1) {
+                        currentFileMd5 = filesArr[count].fileMd5;
+                        currentFileId = filesArr[count].id;
+                        currentFileSize = filesArr[count].size;
                     }
-                    //执行上传
-                    uploader.upload(currentFileId);
                 }
-            });
+                //先查询该文件是否上传过 如果上传过已经上传的进度是多少
+                $.ajax({
+                    type: "POST",
+                    url: "/uploaders/selectProgressByFileName",
+                    data: {
+                        fileMd5: currentFileMd5
+                    },
+                    cache: false,
+                    async: false,  // 同步
+                    dataType: "json",
+                    success: function (data) {
+                        //如果上传过 将进度存入map
+                        if (data > 0) {
+                            //文件总大小，单位：MB(兆)
+                            var fileSize = currentFileSize / (1024 * 1024);
+                            //计算上传进度百分比
+                            var bf = Math.round((data / fileSize) * 100);
+                            //更新该文件上传进度存入map集合
+                            map[currentFileId] = bf;
+                        }
+                        //执行上传
+                        uploader.upload(currentFileId);
+                    }
+                });
+            }
         }
     });
 
