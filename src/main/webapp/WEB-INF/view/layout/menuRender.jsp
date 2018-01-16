@@ -36,6 +36,9 @@
     <li>
         <a href="${ctx}/uploaders/uploader" class="waves-effect"><i class="md md-home"></i><span>WEB UPLOADER</span></a>
     </li>
+    <li>
+        <a href="${ctx}/uploaders/autoUploader" class="waves-effect"><i class="md md-home"></i><span>AUTO WEB UPLOADER</span></a>
+    </li>
     <%--<li class="has_sub">
         <a href="javascript:;" class="waves-effect"><i class=""></i><span>业务管理</span><span class="pull-right"><i
                 class="md md-add"></i></span></a>

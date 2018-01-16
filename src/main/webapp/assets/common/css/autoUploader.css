@@ -1,0 +1,36 @@
+.progressall{
+    width: 400px;
+    background: #fff;
+    height: 200px;
+    position: fixed;
+    bottom: 0px;
+    right: 10px;
+    box-shadow: 0px 0px 10px #666;
+    border-radius: 3px;
+    z-index: 999;
+    margin-bottom: 0px;
+}
+
+.protop{
+    padding: 7px;
+    background: #418dd3;
+    border-radius: 3px 3px 0 0;
+    color: #fff;
+    font-size: 12px;
+}
+
+.progress{
+    width: 313px;
+}
+
+.progress-bar{
+    line-height: 17px;
+}
+
+.del div{
+    float: left;
+}
+
+.al div{
+    float: left;
+}

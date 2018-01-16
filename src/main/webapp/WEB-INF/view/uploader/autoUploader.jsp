@@ -1,0 +1,61 @@
+<%@page pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<!DOCTYPE html>
+<html lang="zh_CN">
+<%@include file="/WEB-INF/view/layout/header.jsp" %>
+<!-- laypage css-->
+<link rel="stylesheet" href="${ctx}/assets/common/webuploader-0.1.5/webuploader.css">
+<link rel="stylesheet" href="${ctx}/assets/common/css/autoUploader.css">
+<!--引入JS-->
+<script type="text/javascript" src="${ctx}/assets/common/webuploader-0.1.5/jquery-1.10.2.min.js"></script>
+<script type="text/javascript" src="${ctx}/assets/common/webuploader-0.1.5/webuploader.js"></script>
+<body class="fixed-left">
+<div id="wrapper">
+    <%@include file="/WEB-INF/view/layout/top.jsp" %>
+    <%@include file="/WEB-INF/view/layout/left.jsp" %>
+    <div class="content-page">
+        <div class="content">
+            <div class="container">
+                <!-- Page-Title -->
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h4 class="pull-left page-title">web uploader auto 上传文件</h4>
+                    </div>
+                </div>
+                <div  style="width: 400px;height: 400px;">
+                     <div id="picker">选择文件</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- 上传进度 start -->
+    <div class="progressall" id="upload" style="margin-bottom: -170px;">
+        <div class="protop">上传文件进度</div>
+        <div style="overflow-x: hidden;height: 170px;margin: 1px 0 0 0;">
+            <div id="post-container" class="container">
+                <div id="uploader" class="wu-example">
+                    <div id="thelist" class="uploader-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 上传进度 end -->
+    <footer class="footer text-right">
+        2016 © Moltran.
+    </footer>
+</div>
+</div>
+<%@include file="/WEB-INF/view/layout/footer.jsp" %>
+<!--laypage js-->
+<script src="${ctx}/assets/common/lib/laypage/laypage.js"></script>
+<script>
+    window._TOTAL_PAGE = '${adminlist.getPages()}';
+    window._CURRENT_PAGE = '${pageNum}';
+</script>
+<!-- 其他功能JS -->
+<script src="${ctx}/assets/uploader/autoUploader.js"></script>
+
+<%--<script src="${ctx}/assets/common/js/page.js"></script>--%>
+</body>
+</html>

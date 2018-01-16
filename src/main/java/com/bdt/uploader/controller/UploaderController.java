@@ -8,6 +8,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -46,7 +47,18 @@ public class UploaderController {
     }
 
     /**
+     * auto web uploader 自动上传
+     *
+     * @return
+     */
+    @RequestMapping(value = "/autoUploader", method = RequestMethod.GET)
+    public String autoUploader() {
+        return "WEB-INF/view/uploader/autoUploader";
+    }
+
+    /**
      * 保存文件
+     *
      * @param multipartFile
      * @param fileNames
      * @param chunk
@@ -54,10 +66,10 @@ public class UploaderController {
      */
     @RequestMapping(value = "webuploads", method = RequestMethod.POST)
     @ResponseBody
-    public void webuploads(@RequestParam("file") CommonsMultipartFile multipartFile, @RequestParam(value = "name") String fileNames, @RequestParam(value = "chunk", required = false, defaultValue = "0") int chunk,@RequestParam("fileMd5") String fileMd5)throws Exception {
+    public void webuploads(@RequestParam("file") CommonsMultipartFile multipartFile, @RequestParam(value = "name") String fileNames, @RequestParam(value = "chunk", required = false, defaultValue = "0") int chunk, @RequestParam("fileMd5") String fileMd5) throws Exception {
         try {
             if (!multipartFile.isEmpty() && multipartFile != null) {
-                uploaderFileService.saveOneChunk(fileNames, multipartFile, chunk,fileMd5);
+                uploaderFileService.saveOneChunk(fileNames, multipartFile, chunk, fileMd5);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -66,41 +78,44 @@ public class UploaderController {
     }
 
     /**
-     *  合并，验证分片
+     * 合并，验证分片
+     *
      * @param request
      * @param response
      */
-    @RequestMapping(value = "/mergeOrCheckChunks",method = RequestMethod.POST)
+    @RequestMapping(value = "/mergeOrCheckChunks", method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ResponseBody
-    public void mergeOrCheckChunks(HttpServletRequest request,HttpServletResponse response)throws Exception{
-        String param=request.getParameter("param");
-        String fileName=request.getParameter("fileName");
-        String fileMd5=request.getParameter("fileMd5");
-        if(param.equals("checkChunk")){//是否存在分片文件
-            int chunk=Integer.valueOf(request.getParameter("chunk"));
-            String chunkSize=request.getParameter("chunkSize");
-            try{
-                String checkChunk=uploaderFileService.checkChunk(fileName,chunk,chunkSize,fileMd5);
-                response.getWriter().write(checkChunk);
-            }catch (Exception e){
-                e.printStackTrace();
+    public String mergeOrCheckChunks(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        String param = request.getParameter("param");
+        String fileName = request.getParameter("fileName");
+        String fileMd5 = request.getParameter("fileMd5");
+        String chunkCount = request.getParameter("chunks");
+        String statc = null;
+        if (param.equals("checkChunk")) {//是否存在分片文件
+            int chunk = Integer.valueOf(request.getParameter("chunk"));
+            String chunkSize = request.getParameter("chunkSize");
+            statc = uploaderFileService.checkChunk(fileName, chunk, chunkSize, fileMd5);
+        } else if (param.equals("mergeChunks")) {//合并分片文件
+            if (chunkCount != null && !chunkCount.equals("")) {
+                int chunks = Integer.valueOf(chunkCount);
+                statc = uploaderFileService.mergeChunks(fileName, chunks, fileMd5);
+            } else {
+                log.info("mergeChunks chunks error:chunks:{},fileName:{},fileMd5:{}", chunkCount, fileName, fileMd5);
             }
-        }else if(param.equals("mergeChunks")){//合并分片文件
-            int chunks=Integer.valueOf(request.getParameter("chunks"));
-            String statc=uploaderFileService.mergeChunks(fileName, chunks,fileMd5);
-            response.getWriter().write(statc);
         }
+       return statc;
     }
 
     /**
      * 查询当前文件是否上传过，如果上传过，上传进度是多少
+     *
      * @param request
      */
-    @RequestMapping(value = "selectProgressByFileName",method = RequestMethod.POST)
+    @RequestMapping(value = "selectProgressByFileName", method = RequestMethod.POST)
     @ResponseBody
-    public String  selectProgressByFileName(HttpServletRequest request)throws Exception{
-        String fileMd5=request.getParameter("fileMd5");
-        String fileSize=uploaderFileService.selectProgressByFileName(fileMd5);
+    public String selectProgressByFileName(HttpServletRequest request) throws Exception {
+        String fileMd5 = request.getParameter("fileMd5");
+        String fileSize = uploaderFileService.selectProgressByFileName(fileMd5);
         return fileSize;
     }
 
