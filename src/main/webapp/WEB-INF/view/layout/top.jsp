@@ -3,7 +3,7 @@
     <!-- LOGO -->
     <div class="topbar-left">
         <div class="text-center">
-            <a href="${ctx}" class="logo"><i class="md md-terrain"></i> <span>云排名 </span></a>
+            <a href="${ctx}" class="logo"><i class="md md-terrain"></i> <span>Hello World! </span></a>
         </div>
     </div>
     <div class="navbar navbar-default" role="navigation">

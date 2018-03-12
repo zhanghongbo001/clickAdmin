@@ -4,6 +4,7 @@ import com.bdt.admin.biz.AdminBiz;
 import com.bdt.framework.entity.Admin;
 import com.bdt.framework.exception.BusinessException;
 import com.github.pagehelper.Page;
+import lombok.experimental.Accessors;
 import org.apache.ibatis.annotations.Param;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -10,7 +10,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>后台系统（云排名）</title>
+    <title>后台系统</title>
     <meta charset="utf-8">
     <link href="assets/login/css/home.css?v=2" rel="stylesheet" type="text/css"/>
     <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
@@ -35,7 +35,7 @@
     <script type="text/javascript" src="${ctx}/assets/login/js/login.js"></script>
     <div class="container">
         <div class="register-box">
-            <div class="reg-slogan"> 后台系统管理（云排名）</div>
+            <div class="reg-slogan"> 后台系统管理</div>
 
             <div class="reg-form" id="js-form-mobile"><br>
                 <br>
